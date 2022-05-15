@@ -1,19 +1,72 @@
 #!/usr/bin/env python3
 
 import time
-
 import matplotlib
+
 import matplotlib.pyplot as plt
 import numpy as np
 import serial
+import sys
 
 arduino = serial.Serial(port="COM3", baudrate=115200, timeout=0.1)
 
-""" I need to consider creating starting and ending packet information for sending to the arduino so that it can tell what kind
-of stuff I am sending to it. For instance, if I send it a packet wrapped like: '<>' and I am expecting a packet like '{}' I know
-that one is for commands and the other is for the number of steps from home to move to reach the edge of the sensor. This could
-be important if I end up having issues where the buffer has stuff missordered. Can maybe get around this by using sleep/delay commands.
-"""
+
+class LiveHeatmap:
+    def __init__(self):
+        self.map_size = None
+        self.fig = None
+        self.ax = None
+        self.im = None
+    
+    def create_heat_map(self, data=None, text=True):
+        if data is None:
+            data = np.random.random((4,2))
+        self.fig = plt.figure()
+        self.fig.canvas.mpl_connect('close_event', self.save_fig)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        if text:
+            self.create_text(data)
+        self.im = self.ax.imshow(data, cmap='Reds', vmin=0, vmax=15)
+        plt.show(block=False)
+
+    def update_map(self, data, scale=1, text=True):
+        if self.fig is None:
+            self.create_heat_map(data)
+
+        time.sleep(0.1)
+        self.im.set_array(data*scale)
+        if text:
+            self.update_text(data)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+    def create_text(self, data):
+        row, col = data.shape
+        for i in range(row):
+            for j in range(col):
+                self.ax.text(j, i, round(data[i, j], 3),
+                       ha="center", va="center", color="w")
+
+    def update_text(self, data):
+        row, col = data.shape
+        idx = 0
+        for i in range(row):
+            for j in range(col):
+                self.ax.texts[idx].set_text(round(data[i, j], 3))
+                idx += 1
+
+    def set_axes_ticks(self, xticks, yticks):
+        self.ax.set_xticks(xticks)
+        self.ax.set_yticks(yticks)
+
+    def save_fig(self, needs_to_be_here_for_some_reason):
+        plt.savefig("C:\\Users\\Aiden\\Documents\\Research\\UnderwaterTactileSensor\\Underwater-Tactile-Sensor\\Figures\\heatmap.png")
+        sys.exit()
+    
+
+
 
 def writeCommand(command):
     """ Writes command to arduino to initiate different functionalities
@@ -103,7 +156,6 @@ def sendSerialMSG(msg, delimiter="\n"):
     #         print(arduino.readline().decode())
 
 
-
 def startup(delay=100, timeout=5):
     start_time = time.time()
     while True:
@@ -121,6 +173,7 @@ def startup(delay=100, timeout=5):
         if (time.time()-start_time) > timeout:
             return False
 
+
 if __name__ == "__main__":
     ready = startup()
     if ready:
@@ -129,26 +182,17 @@ if __name__ == "__main__":
     if ready:
         print("starting program")
         cal = getCalibration()
-        rand_startup_data = np.random.random((4,2))
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.set_xticks([0, 1])
-        ax.set_yticks([3, 2, 1, 0])
-        im = ax.imshow(rand_startup_data, cmap='Reds')
-        plt.show(block=False)
-        for i in range(4):
-            for j in range(2):
-                text = ax.text(j, i, round(rand_startup_data[i, j],3),
-                            ha="center", va="center", color="w")
-        
+        heatmap = LiveHeatmap()
+        saved = False
+        i = 0
         while True:
+            i += 1
             # writeCommand("run")
             msg_status, sens_data = readSensorData(calibration=cal)
             # time.sleep(0.005)
             if msg_status != False:
-                vizSensorData(fig, ax, im, sens_data, scale=5)
-                print(sens_data)
-            # time.sleep(1)
+                heatmap.update_map(sens_data, scale=5)
+
     else:
         print("failed to startup")
 
