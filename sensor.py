@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import time
-import matplotlib
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,7 +27,7 @@ class LiveHeatmap:
         self.ax.set_yticks([])
         if text:
             self.create_text(data)
-        self.im = self.ax.imshow(data, cmap='Reds', vmin=0, vmax=15)
+        self.im = self.ax.imshow(data, cmap='Reds', vmin=0, vmax=0.5)
         plt.show(block=False)
 
     def update_map(self, data, scale=1, text=True):
@@ -60,13 +59,14 @@ class LiveHeatmap:
     def set_axes_ticks(self, xticks, yticks):
         self.ax.set_xticks(xticks)
         self.ax.set_yticks(yticks)
+    
+    def add_title(self, title):
+        self.ax.set_title(title)
 
     def save_fig(self, needs_to_be_here_for_some_reason):
         plt.savefig("C:\\Users\\Aiden\\Documents\\Research\\UnderwaterTactileSensor\\Underwater-Tactile-Sensor\\Figures\\heatmap.png")
         sys.exit()
     
-
-
 
 def writeCommand(command):
     """ Writes command to arduino to initiate different functionalities
@@ -131,17 +131,6 @@ def readSensorData(calibration=None, timeout=5):
             return True, processedData
         return False, None 
 
-def vizSensorData(fig, ax, im, data, scale=1) -> None:
-    time.sleep(0.1)
-    im.set_array(data*scale)
-    row, col = data.shape
-    for i in range(row):
-        for j in range(col):
-            ax.texts[(j*col)+i].set_text(round(data[i, j], 3))
-    fig.canvas.draw()
-    fig.canvas.flush_events()
-
-
 def sendSerialMSG(msg, delimiter="\n"):
     msg_str = "{0}{1}".format(msg, delimiter)
     # msg_str = "{0} {1}".format(msg,delimiter)
@@ -154,7 +143,7 @@ def sendSerialMSG(msg, delimiter="\n"):
     #     if arduino.in_waiting > 0:
     #         confirmation = True
     #         print(arduino.readline().decode())
-
+    pass
 
 def startup(delay=100, timeout=5):
     start_time = time.time()
@@ -183,6 +172,8 @@ if __name__ == "__main__":
         print("starting program")
         cal = getCalibration()
         heatmap = LiveHeatmap()
+        heatmap.create_heat_map()
+        heatmap.add_title("Tactile Sensor Visualization")
         saved = False
         i = 0
         while True:
@@ -191,7 +182,7 @@ if __name__ == "__main__":
             msg_status, sens_data = readSensorData(calibration=cal)
             # time.sleep(0.005)
             if msg_status != False:
-                heatmap.update_map(sens_data, scale=5)
+                heatmap.update_map(sens_data, scale=3)
 
     else:
         print("failed to startup")
