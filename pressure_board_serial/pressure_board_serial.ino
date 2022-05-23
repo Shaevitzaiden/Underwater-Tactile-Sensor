@@ -6,8 +6,6 @@
 */
 
 #include "Wire.h"
-#include <SPI.h>
-#include <SD.h>
 
 #define mux_addr 0x70
 #define sensor_addr 0x76
@@ -33,31 +31,16 @@ uint8_t terminate = 0;
 uint16_t c[8][6];
 unsigned long t;
 
-const unsigned int MAX_MESSAGE_LENGTH = 8;
-int td;
+const byte numChars = 32;
+char receivedChars[numChars];   // an array to store the received data
+boolean newData = false;
+int dataNumber = 0;
 
 
 void setup() {
-  Serial.begin(112500);
-  Serial.setTimeout(1);
-
-  clearOutputBuffer();
-  Serial.println("1");
-
   Wire.begin();
-  delay(100);
+  delay(10);
 
-
-//  while (true) {
-////    Serial.println("waiting");
-//    if (Serial.available() > 0) {
-//      td = readSerialData();
-//      Serial.println(td);
-//      break;
-//    }
-//    delay(1000);
-//  }
-//  while (true){}
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   byte c_addr[6] = {0xA2, 0xA4, 0xA6, 0xA8, 0xAA, 0xAC}; // C1-C6 calibration value addresses
 
@@ -68,84 +51,104 @@ void setup() {
     delay(1);
     for (int j = 0; j < 6; j++) {
       c[i][j] = read_data16(c_addr[j]); // store calibration value
-      // Serial.print("sensor "); Serial.print(i); Serial.print(" "); Serial.println(c[i][j]);
     }
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////////
-  delay(100);
+  Serial.begin(115200);
+  clearInputBuffer();
+  Serial.println("1");
 }
 
+void clearInputBuffer() {
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
+}
 
-void loop()
-{
-  // Keep looping waiting for messages
+void loop() {
+  recvWithStartEndMarker();
+  parseCommands();
+}
+
+void recvWithStartEndMarker() {
+  static boolean recvInProgress = false;
+  static byte ndx = 0;
+  char startMarker = '<';
+  char endMarker = '>';
   char rc;
-  int cmd = 0;
+
+  while (Serial.available() > 0 && newData == false) {
+    rc = Serial.read();
+    if (recvInProgress == true) {
+      if (rc != endMarker) {
+        receivedChars[ndx] = rc;
+        ndx++;
+        if (ndx >= numChars) {
+          ndx = numChars - 1;
+        }
+      }
+      else {
+        receivedChars[ndx] = '\0'; // terminate the string
+        recvInProgress = false;
+        ndx = 0;
+        newData = true;
+      }
+    }
+    else if (rc == startMarker) {
+      recvInProgress = true;
+    }
+  }
+}
+
+void parseCommands() {
+  int c[3] = {0, 0, 0};
+  int c_idx = 0;
+  int t_idx = 0;
+  char temp[32];
+
+  if (newData == true) {
+    // Parse other values
+    int len = strlen(receivedChars);
+    for (int i = 0; i < len + 1; i++) {
+      if ((receivedChars[i] != ',') && (i != len)) {
+        temp[t_idx] = receivedChars[i];
+        t_idx++;
+      }
+      else {
+        temp[i] = '\0';
+        c[c_idx] = atoi(temp);
+        c_idx++;
+        t_idx = 0;
+      }
+    }
+    if (c[0] == 0) {
+      Serial.println(c[0]);
+      while (true);
+    }
+    else if (c[0] == 1) {
+      Serial.println(c[0]);
+      writeSensorData();
+    }
+    else if (c[0] == 2) {
+      Serial.println(c[0]);
+    }
+    newData = false;
+  }
+}
+
+void controlLoop() {
+  boolean inControl = true;
+  while (inControl) {
+  }
+}
+
+void writeSensorData() {
   int32_t P[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   getSensorData(P);
   for (int i = 0; i < 7; i++) {
     Serial.print(P[i]); Serial.print(", ");
   }
   Serial.println(P[7]);
-  delay(100);
-//  delay(td);
-  //  while (true) {
-  //    if (Serial.available() > 0) {
-  //      rc = Serial.read();
-  //      cmd = atoi(rc);
-  //
-  //      if (cmd == 0){
-  //        Serial.println(cmd);
-  //        P[8] = getSensorData();
-  //        writeSerialData(P);
-  //      }
-  //      else if (cmd == 1){
-  //        delay(1);
-  //      }
-  //    }
-  //    delay(5);
-    }
-
-//}
-
-void clearOutputBuffer() {
-  while (Serial.available() > 0) {
-    Serial.read();
-  }
-}
-
-int readSerialData() {
-  int num = 0;
-  //Create a place to hold the incoming message
-  static char message[MAX_MESSAGE_LENGTH];
-  static unsigned int message_pos = 0;
-  
-  while (Serial.available() > 0){
-    //Read the next available byte in the serial receive buffer
-    char inByte = Serial.read();
-    Serial.println(inByte);
-    //Message coming in (check not terminating character) and guard for over message size
-    if ( inByte != '1') //&& (message_pos < MAX_MESSAGE_LENGTH - 1) )
-    {
-      //Add the incoming byte to our message
-      message[message_pos] = inByte;
-      message_pos++;
-      Serial.println(message_pos);
-    }
-    //Full message received...
-    else
-    {
-      Serial.println("finished message");
-      //Add null character to string
-      message[message_pos] = '\0';
-      Serial.println(message);
-      num = atoi(message);
-
-      //Reset for the next message
-      message_pos = 0;
-    }
-  }
-  return num;
 }
 
 void getSensorData(int32_t *p_array) {
@@ -160,16 +163,6 @@ void getSensorData(int32_t *p_array) {
     int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
     p_array[i] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
   }
-}
-
-void writeSerialData(uint32_t msg[8]) {
-  for (int i = 0; i < 7; i++) {
-    Serial.print(msg[i]);
-    Serial.print(",");
-    delay(1);
-  }
-  Serial.println(msg[7]);
-  delay(5);
 }
 
 void channel_select(uint8_t i) {
@@ -195,7 +188,6 @@ void start_conv(byte osr) {
   delay(4);           // wait for conversion
 }
 
-
 uint32_t read_data32(byte command) {
   // send: read ADC result
   send_command(command);
@@ -213,7 +205,6 @@ uint32_t read_data32(byte command) {
     }
     return combined;
   }
-  //  Serial.print("---------------- Failed to retrieve sensor data------------------");
   uint32_t big_sad = 0;
   return big_sad;
 }
@@ -234,7 +225,6 @@ uint16_t read_data16(byte command) {
     }
     return combined;
   }
-  //  Serial.print("---------------- Failed to retrieve calibration data------------------");
   uint32_t big_sad = 0;
   return big_sad;
 }
