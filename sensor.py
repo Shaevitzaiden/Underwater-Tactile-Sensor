@@ -27,7 +27,7 @@ class LiveHeatmap:
         self.ax.set_yticks([])
         if text:
             self.create_text(data)
-        self.im = self.ax.imshow(data, cmap='Reds', vmin=0, vmax=0.5)
+        self.im = self.ax.imshow(data, cmap='Reds', vmin=0, vmax=0.25)
         plt.show(block=False)
 
     def update_map(self, data, scale=1, text=True):
