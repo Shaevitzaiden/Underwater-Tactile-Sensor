@@ -10,6 +10,8 @@ from myVizTools import LiveHeatmap
 arduino = serial.Serial(port="COM3", baudrate=115200, timeout=0.1)
 
 
+    
+
 def getCalibration():
     """ Get 1-point calibration """
     for i in range(10):
