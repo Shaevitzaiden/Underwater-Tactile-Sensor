@@ -7,7 +7,7 @@ import numpy as np
 
 from myVizTools import LiveHeatmap
 
-arduino = serial.Serial(port="COM3", baudrate=115200, timeout=0.1)
+arduino = serial.Serial(port="COM4", baudrate=115200, timeout=0.1)
 
 
     

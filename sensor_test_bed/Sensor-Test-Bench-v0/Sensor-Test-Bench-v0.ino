@@ -13,10 +13,18 @@ AccelStepper stepperX(AccelStepper::DRIVER, 7, 6); // Defaults to AccelStepper::
 AccelStepper stepperY(AccelStepper::DRIVER, 8, 9); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
 AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
 
+const byte numChars = 32;
+char receivedChars[numChars];   // an array to store the received data
+boolean newData = false;
+int dataNumber = 0;
+
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  clearInputBuffer();
+  Serial.println("1");
+  
   stepperX.setMaxSpeed(400);
   stepperY.setMaxSpeed(400);
   stepperZ.setMaxSpeed(100);
@@ -37,17 +45,89 @@ void setup()
 
   // Slightly back off of limit switches if pressed and lift carriage
   startup_motors();
-
+//  Serial.println(10);
   //  float pos[2] = {5., 20.};
   //  moveToPos_mm(pos);
-  runDemo();
-lowerZ();
+
 }
 
 void loop() {
-
+  recvWithStartEndMarker();
+  parseCommands();
 }
 
+void clearInputBuffer() {
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
+}
+
+void recvWithStartEndMarker() {
+  static boolean recvInProgress = false;
+  static byte ndx = 0;
+  char startMarker = '<';
+  char endMarker = '>';
+  char rc;
+
+  while (Serial.available() > 0 && newData == false) {
+    rc = Serial.read();
+    if (recvInProgress == true) {
+      if (rc != endMarker) {
+        receivedChars[ndx] = rc;
+        ndx++;
+        if (ndx >= numChars) {
+          ndx = numChars - 1;
+        }
+      }
+      else {
+        receivedChars[ndx] = '\0'; // terminate the string
+        recvInProgress = false;
+        ndx = 0;
+        newData = true;
+      }
+    }
+    else if (rc == startMarker) {
+      recvInProgress = true;
+    }
+  }
+}
+
+void parseCommands() {
+  int c[3] = {0, 0, 0};
+  int c_idx = 0;
+  int t_idx = 0;
+  char temp[32];
+
+  if (newData == true) {
+    // Parse other values
+    int len = strlen(receivedChars);
+    for (int i = 0; i < len + 1; i++) {
+      if ((receivedChars[i] != ',') && (i != len)) {
+        temp[t_idx] = receivedChars[i];
+        t_idx++;
+      }
+      else {
+        temp[i] = '\0';
+        c[c_idx] = atoi(temp);
+        c_idx++;
+        t_idx = 0;
+      }
+    }
+    if (c[0] == 0) {
+      Serial.println(c[0]);
+      while (true);
+    }
+    else if (c[0] == 1) {
+      Serial.println(c[0]);
+//      writeSensorData();
+    }
+    else if (c[0] == 2) {
+      Serial.println(c[0]);
+      runDemo();
+    }
+    newData = false;
+  }
+}
 
 void runDemo() {
   float pos0[2] = {0., 0.};
@@ -66,6 +146,8 @@ void runDemo() {
   cycleZ();
   moveToPos_mm(pos0);
   lowerZ();
+  lowerZ();
+  Serial.println(2);
 }
 
 void cycleZ() {
@@ -119,13 +201,13 @@ void moveSteps(int steps[2]) {
       while (true) {
         stepperX.run();
         stepperY.run();
-        Serial.println("stopping");
+//        Serial.println("stopping");
       }
     }
     stepperX.run();
     stepperY.run();
   }
-  Serial.println("-------------- Finished ----------------");
+//  Serial.println("-------------- Finished ----------------");
 }
 
 
@@ -161,11 +243,11 @@ void limit_switch_x1() {
     int val = digitalRead(20);
     if (val) {
       switch_x_1 = true;
-      Serial.println("20 True");
+//      Serial.println("20 True");
     }
     else if (!val) {
       switch_x_1 = false;
-      Serial.println("20 False");
+//      Serial.println("20 False");
     }
   }
   last_interrupt_time_x1 = interrupt_time_x1;
@@ -181,11 +263,11 @@ void limit_switch_x2() {
     int val = digitalRead(21);
     if (val) {
       switch_x_2 = true;
-      Serial.println("21 True");
+//      Serial.println("21 True");
     }
     else if (!val) {
       switch_x_2 = false;
-      Serial.println("21 False");
+//      Serial.println("21 False");
     }
   }
   last_interrupt_time_x2 = interrupt_time_x2;
@@ -200,11 +282,11 @@ void limit_switch_y1() {
     int val = digitalRead(18);
     if (val) {
       switch_y_1 = true;
-      Serial.println("18 True");
+//      Serial.println("18 True");
     }
     else if (!val) {
       switch_y_1 = false;
-      Serial.println("18 False");
+//      Serial.println("18 False");
     }
   }
   last_interrupt_time_y1 = interrupt_time_y1;
@@ -220,11 +302,11 @@ void limit_switch_y2() {
     int val = digitalRead(19);
     if (val) {
       switch_y_2 = true;
-      Serial.println("19 True");
+//      Serial.println("19 True");
     }
     else if (!val) {
       switch_y_2 = false;
-      Serial.println("19 False");
+//      Serial.println("19 False");
     }
 
   }

@@ -1,38 +1,36 @@
 #!/usr/bin/env python3
 
 import time
+from tracemalloc import start
 import serial
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
 from myVizTools import LiveHeatmap
-from sensor import msgConfirmation
 
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM3", baudrate=115200, timeout=0.1)
+        self.arduino = serial.Serial(port="COM4", baudrate=115200, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
-        if ready:
-            print("Coms initiated successfully")
-        else:    
-            print("Failed to initiate coms, terminate and retry")
-            while True:
-                time.sleep(0.5)
+        if not ready:    
+            print("Failed to initiate coms, retry")
+            sys.exit()
 
         self.in_motion = False
         self.sensor_calibration = None
 
     def startup(self, delay=100, timeout=3):
         t1 = time.time()
-        while True:
-            if self.arduino.in_waiting > 0:
-                inByte = int(self.arduino.read_until().decode())
-                if inByte == 1:
-                    print("startup successful")
-                    return True
-            elif (time.time()-t1) > timeout:
-                return False
+        startup = self.msgConfirmation(10)
+        print("Coms up")
+        if startup:
+            ready = self.msgConfirmation(11, timeout=10)
+            print("Motors ready")
+            if ready:
+                return True
+        return False
     
     def sendSerialMSG(self, msg, begin_delimiter="<", end_delimiter=">", timeout=100):
         """ Send msg by serial line, expects to recieve the same message back as confirmation"""
@@ -53,22 +51,51 @@ class SensorTestBench():
         while (time.time() - t1) < timeout:
             if self.arduino.in_waiting > 0:
                 msg = int(self.arduino.read_until().decode()[:-2])
+                print(msg)
                 if msg == msgToBeReceived:
                     return True
         return False
     
-    def movetoPos(self, pos):
-        # Conversion factor using lead screw and number of steps
-        # call moveToSteps
-        pass
+    def runDemo(self):
+        started = self.sendSerialMSG([4,0,0])
+        if started:
+            print("Successfully started")
+            finished = self.msgConfirmation(2, timeout=30)
+            if finished:
+                print("Successfully finished")
+                return True
+        print("Failed to complete")
+        return False
 
-    def moveToStep(self, steps):
+
+    # def movetoPos(self, pos):
+    #     # Absolute position in mm from origin (startup pos or calibrated home)
+
+    #     pass
+
+    def moveToPos(self, pos):
         # Send and confirm that command initiated
-        start_motion = self.sendSerialMSG([2,steps[0],steps[1]])
+        start_motion = self.sendSerialMSG([2,pos[0],pos[1]*-1])
         is_finished = False
         if start_motion:
             print("motion started")
-            finished_motion = msgConfirmation(2)
+            finished_motion = self.msgConfirmation(2)
+            if finished_motion:
+                print("motion finished")
+                is_finished = True
+            else:
+                print("motion failed to finish")
+        else:
+            print("motion failed to start")
+        return is_finished
+
+    def moveToSteps(self, steps):
+        # Send and confirm that command initiated
+        start_motion = self.sendSerialMSG([3,steps[0],steps[1]*-1])
+        is_finished = False
+        if start_motion:
+            print("motion started")
+            finished_motion = self.msgConfirmation(2)
             if finished_motion:
                 print("motion finished")
                 is_finished = True
@@ -111,3 +138,4 @@ class SensorTestBench():
 
 if __name__ == "__main__":
     test_bench = SensorTestBench()
+    test_bench.sendSerialMSG([6,9,9])
