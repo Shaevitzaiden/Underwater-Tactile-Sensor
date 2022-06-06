@@ -6,25 +6,25 @@ bool switch_y_1 = false;
 bool switch_y_2 = false;
 
 const float screw_lead = 8; // mm/rotation
-const float stepsPerRevolutionXY = 800;
-const float stepsPerRevolutionZ = 200;
-
-AccelStepper stepperX(AccelStepper::DRIVER, 7, 6); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
-AccelStepper stepperY(AccelStepper::DRIVER, 8, 9); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
-AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
+float stepsPerRevolutionXY = 800;
+float stepsPerRevolutionZ = 200;
 
 const byte numChars = 32;
 char receivedChars[numChars];   // an array to store the received data
 boolean newData = false;
 int dataNumber = 0;
 
+AccelStepper stepperX(AccelStepper::DRIVER, 7, 6); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
+AccelStepper stepperY(AccelStepper::DRIVER, 8, 9); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
+AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
+
 
 void setup()
 {
   Serial.begin(115200);
   clearInputBuffer();
-  Serial.println("1");
-  
+  Serial.println("10");
+
   stepperX.setMaxSpeed(400);
   stepperY.setMaxSpeed(400);
   stepperZ.setMaxSpeed(100);
@@ -45,10 +45,10 @@ void setup()
 
   // Slightly back off of limit switches if pressed and lift carriage
   startup_motors();
-//  Serial.println(10);
-  //  float pos[2] = {5., 20.};
-  //  moveToPos_mm(pos);
-
+  Serial.println("11");
+//  int offset[2] = {};
+//  getOffset(offset);
+//  moveToHome(offset);
 }
 
 void loop() {
@@ -119,15 +119,111 @@ void parseCommands() {
     }
     else if (c[0] == 1) {
       Serial.println(c[0]);
-//      writeSensorData();
+      //      writeSensorData();
     }
     else if (c[0] == 2) {
       Serial.println(c[0]);
-      runDemo();
+      float coords[2] = {c[1], c[2]};
+      moveToPos_mm(coords);
+      Serial.println(c[0]);
+    }
+    else if (c[0] == 3) {
+      Serial.println(c[0]);
+      int steps[2] = {c[1], c[2]};
+      moveSteps(steps, false);
+    }
+    else if (c[0] == 6) {
+      Serial.println(c[0]);
+      runToLimitSwitches();
+    }
+    else if (c[0] == 7) {
+      Serial.println(c[0]);
+      int homeOffsets[2] = {};
+      getOffset(homeOffsets);
+      Serial.print(homeOffsets[0]); Serial.print(", "); Serial.println(homeOffsets[1]);
+    }
+    else if (c[0] == 9) {
+      Serial.println(c[0]);
+      stepsPerRevolutionXY = c[1];
+      stepsPerRevolutionZ = c[2];
     }
     newData = false;
   }
 }
+
+
+void moveToHome(int offset[2]) {
+  // First run to limit switches
+  offset[0] =  offset[0] * -1;
+  offset[1] =  offset[1] * -1;
+  moveSteps(offset, true);
+}
+
+
+void runToLimitSwitches() {
+  stepperX.setMaxSpeed(200);
+  stepperY.setMaxSpeed(200);
+
+  int stepsX = getStepsXY(-100.0);
+  int stepsY = getStepsXY(-100.0);
+
+  bool zeroedX = false;
+  bool zeroedY = false;
+
+  stepperX.moveTo(stepsX);
+  stepperY.moveTo(stepsY);
+
+  while ((!switch_x_2) || (!switch_y_2)) {
+    if (switch_x_2 && (!zeroedX)) {
+      stepperX.setCurrentPosition(0);
+      zeroedX = true;
+      stepperX.moveTo(0);
+    }
+    if (switch_y_2 && (!zeroedY)) {
+      stepperY.setCurrentPosition(0);
+      zeroedY = true;
+      stepperY.moveTo(0);
+    }
+    stepperX.run();
+    stepperY.run();
+  }
+  // Make sure that it is stopped all of the way
+
+}
+
+
+void getOffset(int *offsets) {
+  stepperX.setMaxSpeed(200);
+  stepperY.setMaxSpeed(200);
+
+  // Set position to go to in steps
+  int stepsX = getStepsXY(-100.0);
+  int stepsY = getStepsXY(-100.0);
+
+  bool zeroedX = false;
+  bool zeroedY = false;
+
+  stepperX.moveTo(stepsX);
+  stepperY.moveTo(stepsY);
+
+  while ((!switch_x_2) || (!switch_y_2)) {
+    if (switch_x_2 && (!zeroedX)) {
+      offsets[0] = (int) stepperX.currentPosition();
+      stepperX.setCurrentPosition(0);
+      zeroedX = true;
+      stepperX.moveTo(0);
+    }
+    if (switch_y_2 && (!zeroedY)) {
+      offsets[1] = (int) stepperY.currentPosition();
+      stepperY.setCurrentPosition(0);
+      zeroedY = true;
+      stepperY.moveTo(0);
+    }
+    stepperX.run();
+    stepperY.run();
+  }
+}
+
 
 void runDemo() {
   float pos0[2] = {0., 0.};
@@ -147,7 +243,7 @@ void runDemo() {
   moveToPos_mm(pos0);
   lowerZ();
   lowerZ();
-  Serial.println(2);
+  Serial.println("2");
 }
 
 void cycleZ() {
@@ -157,7 +253,6 @@ void cycleZ() {
 }
 
 void startup_motors() {
-  // Need to add a startup for the z-axis to get the flapper in the right position
   int sx1 = digitalRead(20);
   int sx2 = digitalRead(21);
   int sy1 = digitalRead(18);
@@ -179,38 +274,38 @@ void startup_motors() {
   else if (sx2) {
     steps[0] =  ls_steps;
   }
-  moveSteps(steps);
+  moveSteps(steps, true);
 
 }
 
 void moveToPos_mm(float pos[2]) {
   // convert coords (mm) to steps and round to closest number of steps
   int steps[2] = {getStepsXY(pos[0]), getStepsXY(pos[1])};
-  moveSteps(steps);
+  moveSteps(steps, false);
 }
 
-void moveSteps(int steps[2]) {
+void moveSteps(int steps[2], bool ignore_ls) {
+  stepperX.setMaxSpeed(400);
+  stepperY.setMaxSpeed(400);
   // Set position to go to in steps
   stepperX.moveTo(steps[0]);
   stepperY.moveTo(steps[1]);
 
   // Motor movement loop
   while ((stepperX.distanceToGo() != 0) ||  (stepperY.distanceToGo() != 0)) {
-    if (switch_x_1 || switch_x_2 || switch_y_1 || switch_y_2) {
+    if ((switch_x_1 || switch_x_2 || switch_y_1 || switch_y_2) && (!ignore_ls)) {
       stepperX.stop();
       stepperY.stop();
       while (true) {
         stepperX.run();
         stepperY.run();
-//        Serial.println("stopping");
+        //        Serial.println("stopping");
       }
     }
     stepperX.run();
     stepperY.run();
   }
-//  Serial.println("-------------- Finished ----------------");
 }
-
 
 void raiseZ() {
   stepperZ.moveTo(150);
@@ -232,7 +327,6 @@ int getStepsXY(float distance) {
   return steps;
 }
 
-
 // --------------- LIMIT SWITCH FUNCTIONS ------------------
 void limit_switch_x1() {
   static unsigned long last_interrupt_time_x1 = 0;
@@ -244,11 +338,11 @@ void limit_switch_x1() {
     int val = digitalRead(20);
     if (val) {
       switch_x_1 = true;
-//      Serial.println("20 True");
+      //      Serial.println("20 True");
     }
     else if (!val) {
       switch_x_1 = false;
-//      Serial.println("20 False");
+      //      Serial.println("20 False");
     }
   }
   last_interrupt_time_x1 = interrupt_time_x1;
@@ -283,11 +377,11 @@ void limit_switch_y1() {
     int val = digitalRead(18);
     if (val) {
       switch_y_1 = true;
-//      Serial.println("18 True");
+      //            Serial.println("18 True");
     }
     else if (!val) {
       switch_y_1 = false;
-//      Serial.println("18 False");
+      //      Serial.println("18 False");
     }
   }
   last_interrupt_time_y1 = interrupt_time_y1;
@@ -309,7 +403,6 @@ void limit_switch_y2() {
       switch_y_2 = false;
 //      Serial.println("19 False");
     }
-
   }
   last_interrupt_time_y2 = interrupt_time_y2;
 }

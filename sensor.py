@@ -7,7 +7,7 @@ import numpy as np
 
 from myVizTools import LiveHeatmap
 
-arduino = serial.Serial(port="COM4", baudrate=115200, timeout=0.1)
+arduino = serial.Serial(port="COM3", baudrate=115200, timeout=0.1)
 
 
     
@@ -76,12 +76,17 @@ def startup(delay=100, timeout=3):
         elif (time.time()-start_time) > timeout:
             return False
 
+def writeToCSV(data, title="test_data\\test1.csv"):
+    with open (title, 'w') as file:
+        for i in range(data.shape[0]):
+            file.write("{0}\n".format(",".join([str(val) for val in data[i].tolist()])))
+
 
 if __name__ == "__main__":
     ready = startup()
     if ready:
         cal = getCalibration()
-        print(cal)
+        # print(cal)
         # t1 = time.time()
         # for i in range(10):
         #     msg_status, sens_data = getSensorData()
@@ -91,18 +96,24 @@ if __name__ == "__main__":
     # if ready:
     #     print("starting program")
     #     cal = getCalibration()
-        heatmap = LiveHeatmap()
-        heatmap.create_heat_map()
-        heatmap.add_title("Tactile Sensor Visualization")
+        # heatmap = LiveHeatmap()
+        # heatmap.create_heat_map()
+        # heatmap.add_title("Tactile Sensor Visualization")
         saved = False
         i = 0
-        while True:
-            i += 1
+        iterations = 10
+        store_data = np.zeros((iterations,8))
+        while i<iterations:
+            
     #         # writeCommand("run")
             msg_status, sens_data = getSensorData(calibration=cal)
             time.sleep(0.005)
             if msg_status != False:
-                heatmap.update_map(sens_data, scale=2)
+                store_data[i] = sens_data.flatten()
+                # heatmap.update_map(sens_data, scale=2)
+                # write to csv file      
+            i += 1  
+        writeToCSV(store_data)
 
     else:
         print("failed to startup")

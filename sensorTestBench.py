@@ -20,6 +20,12 @@ class SensorTestBench():
 
         self.in_motion = False
         self.sensor_calibration = None
+        self.stored_data = None
+        self.sensor_zero_offset = [3, 3] # mm in x and y
+
+    def run_test_sequence(sample_locs, points_per_loc, write_to_csv=False):
+        
+
 
     def startup(self, delay=100, timeout=3):
         t1 = time.time()
@@ -66,12 +72,6 @@ class SensorTestBench():
                 return True
         print("Failed to complete")
         return False
-
-
-    # def movetoPos(self, pos):
-    #     # Absolute position in mm from origin (startup pos or calibrated home)
-
-    #     pass
 
     def moveToPos(self, pos):
         # Send and confirm that command initiated
@@ -134,6 +134,34 @@ class SensorTestBench():
                 calibration = (calibration + sens_data) / 2   
         self.sensor_calibration = calibration
         return calibration
+
+    def writeToCSV(self, title="test_data\\test1.csv"):
+        with open (title, 'w') as file:
+            for i in range(self.stored_data.shape[0]):
+                file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
+
+    def get_grid_points(self, dims, deltas):
+        # Be careful with the x_dim+dx and y_dim+dy for any non perfectly divisible dimensions by the deltas
+        dx, dy = deltas
+        x_dim, y_dim = dims
+        x_offset, y_offset = self.sensor_zero_offset
+        x_range = np.arange(start=0, stop=x_dim+dx, step=dx)
+        y_range = np.arange(start=0, stop=y_dim+dy, step=dy)
+    
+        target_points = []
+        for i in range(y_range.shape[0]):
+            for j in range(x_range.shape[0]):
+                target_points.append((x_range[j]+x_offset, y_range[i]+y_offset))
+            print(target_points)
+        return target_points
+
+    def get_grid_points(self, dims, deltas):
+        dx, dy = deltas
+        x_dim, y_dim = dims
+        x_range = np.arange(start=0, stop=x_dim, step=dx)
+        y_range = np.arange(start=0, stop=y_dim, step=dy)
+
+
 
 
 if __name__ == "__main__":
