@@ -132,6 +132,18 @@ void parseCommands() {
       int steps[2] = {c[1], c[2]};
       moveSteps(steps, false);
     }
+    else if (c[0] == 4) {
+      Serial.println(c[0]);
+      if (c[1] == 0){
+        raiseZ();
+      }
+      else if (c[1] == 1){
+        lowerZ();
+      }
+      else if (c[1] == 2){
+        // do nothing for now, but can add in degree motion of z-axis when I make a function for that
+      }
+    }
     else if (c[0] == 6) {
       Serial.println(c[0]);
       runToLimitSwitches();
