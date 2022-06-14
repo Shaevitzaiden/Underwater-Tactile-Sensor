@@ -1,4 +1,28 @@
 #include <AccelStepper.h>
+#include "Wire.h"
+
+#define mux_addr 0x70
+#define sensor_addr 0x76
+
+#define reset 0x1E
+#define adc_read 0x00
+
+#define posr245 0x40
+#define posr512 0x42
+#define posr1024 0x44  // conversion time approx = 1.88-2.28ms
+#define posr2048 0x46
+#define posr4096 0x48
+
+#define tosr245 0x50
+#define tosr512 0x52
+#define tosr1024 0x54  // conversion time approx = 1.88-2.28ms
+#define tosr2048 0x56
+#define tosr4096 0x58
+
+uint8_t current_channel = 0;
+uint8_t terminate = 0;
+uint16_t c[8][6];
+unsigned long t;
 
 bool switch_x_1 = false;
 bool switch_x_2 = false;
@@ -21,6 +45,9 @@ AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper
 
 void setup()
 {
+  Wire.begin();
+  delay(10);
+  
   Serial.begin(115200);
   clearInputBuffer();
   Serial.println("10");
@@ -35,21 +62,39 @@ void setup()
 
   pinMode(18, INPUT_PULLUP);
   pinMode(19, INPUT_PULLUP);
-  pinMode(20, INPUT_PULLUP);
-  pinMode(21, INPUT_PULLUP);
+  pinMode(3, INPUT_PULLUP);
+  pinMode(2, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(20), limit_switch_x1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(21), limit_switch_x2, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(3), limit_switch_x1, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(2), limit_switch_x2, CHANGE);
   attachInterrupt(digitalPinToInterrupt(18), limit_switch_y1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(19), limit_switch_y2, CHANGE);
 
   // Slightly back off of limit switches if pressed and lift carriage
-  startup_motors();
-  Serial.println("11");
-//  int offset[2] = {};
-//  getOffset(offset);
-//  moveToHome(offset);
+//  startup_motors();
+//  Serial.println("11");
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+
+
+  byte c_addr[6] = {0xA2, 0xA4, 0xA6, 0xA8, 0xAA, 0xAC}; // C1-C6 calibration value addresses
+
+  //  Loop for population 2d array of calibration values
+  for (int i = 0; i < 8; i++) {
+    channel_select(i);
+    reset_sensor();
+    delay(1);
+    for (int j = 0; j < 6; j++) {
+      c[i][j] = read_data16(c_addr[j]); // store calibration value
+    }
+  }
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  Serial.println("12");
 }
+
+
 
 void loop() {
   recvWithStartEndMarker();
@@ -96,21 +141,27 @@ void parseCommands() {
   int c[3] = {0, 0, 0};
   int c_idx = 0;
   int t_idx = 0;
-  char temp[32];
+  char temp[32] = {};
 
   if (newData == true) {
     // Parse other values
     int len = strlen(receivedChars);
+//    Serial.println(len);
+//    Serial.println(receivedChars);
     for (int i = 0; i < len + 1; i++) {
       if ((receivedChars[i] != ',') && (i != len)) {
         temp[t_idx] = receivedChars[i];
+//        Serial.print("temp0 "); Serial.println(temp);
         t_idx++;
       }
       else {
-        temp[i] = '\0';
+        temp[t_idx] = '\0';
+//        Serial.print("temp "); Serial.println(temp[t_idx]); // Serial.print(" "); Serial.println(temp[t_id]);
         c[c_idx] = atoi(temp);
+//        Serial.println(c[c_idx]);
         c_idx++;
         t_idx = 0;
+        char temp[32] = {};
       }
     }
     if (c[0] == 0) {
@@ -119,11 +170,12 @@ void parseCommands() {
     }
     else if (c[0] == 1) {
       Serial.println(c[0]);
-      //      writeSensorData();
+      writeSensorData();
     }
     else if (c[0] == 2) {
       Serial.println(c[0]);
       float coords[2] = {c[1], c[2]};
+//      Serial.print(coords[0]); Serial.print("  "); Serial.println(coords[1]);
       moveToPos_mm(coords);
       Serial.println(c[0]);
     }
@@ -131,22 +183,30 @@ void parseCommands() {
       Serial.println(c[0]);
       int steps[2] = {c[1], c[2]};
       moveSteps(steps, false);
+      Serial.println(c[0]);
     }
     else if (c[0] == 4) {
       Serial.println(c[0]);
-      if (c[1] == 0){
+      if (c[1] == 0) {
         raiseZ();
       }
-      else if (c[1] == 1){
+      else if (c[1] == 1) {
         lowerZ();
       }
-      else if (c[1] == 2){
+      else if (c[1] == 2) {
         // do nothing for now, but can add in degree motion of z-axis when I make a function for that
       }
+      Serial.println(c[0]);
+    }
+    else if (c[0] == 5) {
+      Serial.println(c[0]);
+      startup_motors();
+      Serial.println(c[0]);
     }
     else if (c[0] == 6) {
       Serial.println(c[0]);
       runToLimitSwitches();
+      Serial.println(c[0]);
     }
     else if (c[0] == 7) {
       Serial.println(c[0]);
@@ -265,14 +325,14 @@ void cycleZ() {
 }
 
 void startup_motors() {
-  int sx1 = digitalRead(20);
-  int sx2 = digitalRead(21);
+  int sx1 = digitalRead(3);
+  int sx2 = digitalRead(2);
   int sy1 = digitalRead(18);
   int sy2 = digitalRead(19);
 
   int ls_steps = getStepsXY(10.0);
   int steps[2] = {0, 0};
-
+//  raiseZ();
   // Check for any triggered limit switches and backoff
   if (sy1) {
     steps[1] = -ls_steps;
@@ -308,7 +368,7 @@ void moveSteps(int steps[2], bool ignore_ls) {
     if ((switch_x_1 || switch_x_2 || switch_y_1 || switch_y_2) && (!ignore_ls)) {
       stepperX.stop();
       stepperY.stop();
-      while (true) {
+      while ((stepperX.distanceToGo() != 0) ||  (stepperY.distanceToGo() != 0)) {
         stepperX.run();
         stepperY.run();
         //        Serial.println("stopping");
@@ -320,7 +380,7 @@ void moveSteps(int steps[2], bool ignore_ls) {
 }
 
 void raiseZ() {
-  stepperZ.moveTo(150);
+  stepperZ.moveTo(110);
   while (stepperZ.distanceToGo() != 0) {
     stepperZ.run();
   }
@@ -347,7 +407,7 @@ void limit_switch_x1() {
   if (interrupt_time_x1 - last_interrupt_time_x1 > 50)
   {
     delay(1);
-    int val = digitalRead(20);
+    int val = digitalRead(3);
     if (val) {
       switch_x_1 = true;
       //      Serial.println("20 True");
@@ -367,14 +427,14 @@ void limit_switch_x2() {
   if (interrupt_time_x2 - last_interrupt_time_x2 > 50)
   {
     delay(1);
-    int val = digitalRead(21);
+    int val = digitalRead(2);
     if (val) {
       switch_x_2 = true;
-//      Serial.println("21 True");
+      //      Serial.println("21 True");
     }
     else if (!val) {
       switch_x_2 = false;
-//      Serial.println("21 False");
+      //      Serial.println("21 False");
     }
   }
   last_interrupt_time_x2 = interrupt_time_x2;
@@ -409,12 +469,126 @@ void limit_switch_y2() {
     int val = digitalRead(19);
     if (val) {
       switch_y_2 = true;
-//      Serial.println("19 True");
+      //      Serial.println("19 True");
     }
     else if (!val) {
       switch_y_2 = false;
-//      Serial.println("19 False");
+      //      Serial.println("19 False");
     }
   }
   last_interrupt_time_y2 = interrupt_time_y2;
+}
+
+///////////////////////////// SENSOR CODES ///////////////////////////////////
+
+
+void writeSensorData() {
+  int32_t P[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  getSensorData(P);
+  for (int i = 0; i < 7; i++) {
+    Serial.print(P[i]); Serial.print(", ");
+  }
+  Serial.println(P[7]);
+}
+
+void getSensorData(int32_t *p_array) {
+  for (int i = 0; i < 8; i++) {
+    uint32_t pressure = digital_pressure_val(i);
+    uint32_t temperature = digital_temperature_val(i);
+
+    int32_t dT = temperature - (c[i][4] * pow(2, 8));
+    int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
+
+    int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
+    int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
+    p_array[i] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
+  }
+}
+
+void channel_select(uint8_t i) {
+  if (i > 7) return;  // exceeds max num of channels
+  current_channel = i; // update active channel
+  Wire.beginTransmission(mux_addr);
+  Wire.write(1 << i);
+  Wire.endTransmission();
+}
+
+void send_command(byte command) {
+  Wire.beginTransmission(sensor_addr);
+  Wire.write(command);
+  Wire.endTransmission();
+}
+
+void reset_sensor() {
+  send_command(0x1E);
+}
+
+void start_conv(byte osr) {
+  send_command(osr);  // start conversion
+  delay(4);           // wait for conversion
+}
+
+uint32_t read_data32(byte command) {
+  // send: read ADC result
+  send_command(command);
+
+  // request bytes
+  Wire.requestFrom(sensor_addr, 3);
+
+  // get first byte if available
+  if (Wire.available()) {
+    uint32_t combined = Wire.read();
+
+    // get remaining bytes
+    while (Wire.available()) {
+      combined = (combined << 8) | (Wire.read());
+    }
+    return combined;
+  }
+  uint32_t big_sad = 0;
+  return big_sad;
+}
+
+uint16_t read_data16(byte command) {
+  // send: read ADC result
+  send_command(command);
+
+  // request bytes
+  Wire.requestFrom(sensor_addr, 2);
+
+  // get first byte if available
+  if (Wire.available()) {
+    uint16_t combined = Wire.read();
+    // get remaining bytes if present
+    while (Wire.available()) {
+      combined = (combined << 8) | (Wire.read());
+    }
+    return combined;
+  }
+  uint32_t big_sad = 0;
+  return big_sad;
+}
+
+uint32_t digital_pressure_val(uint8_t channel) {
+  // if measurement is not on active channel then switch
+  if (channel != current_channel) {
+    channel_select(channel);
+  }
+  // start pressure data conversion
+  start_conv(posr2048);
+  // get data
+  uint32_t data = read_data32(adc_read);
+  return data;
+}
+
+uint32_t digital_temperature_val(uint8_t channel) {
+  // if measurement is not on active channel then switch
+  if (channel != current_channel) {
+    channel_select(channel);
+  }
+  // start pressure data conversion
+  start_conv(tosr2048);
+  // get data
+  uint32_t data = read_data32(adc_read);
+  return data;
 }
