@@ -7,14 +7,17 @@ from myVizTools import LiveHeatmap
 
 def separate_data(data):
     sensor_data = []
+    temp_data = np.zeros((4,2))
     for i in range(data.shape[0]):
-        sensor_data.append(data[i,2:10].reshape((4,2)))
+        temp_data[:,1] = data[i,2:6]
+        temp_data[:,0] = np.flip(data[i,6:10])
+        sensor_data.append(temp_data.copy())
     return sensor_data
 
 
 
 if __name__ == "__main__":
-    data = np.load("test_data\\test_9_19.5_0.5_0.5.npy")
+    data = np.load("test_data\\test_0.5mm.npy")
     sd = separate_data(data)
 
     heatmap = LiveHeatmap()

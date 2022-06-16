@@ -174,10 +174,11 @@ void parseCommands() {
     }
     else if (c[0] == 2) {
       Serial.println(c[0]);
-      float coords[2] = {c[1], c[2]};
+      float coords[2] = {c[1]/10.0, c[2]/10.0};
 //      Serial.print(coords[0]); Serial.print("  "); Serial.println(coords[1]);
       moveToPos_mm(coords);
       Serial.println(c[0]);
+      Serial.print((int) stepperX.currentPosition()); Serial.print(", "); Serial.println((int) stepperY.currentPosition());
     }
     else if (c[0] == 3) {
       Serial.println(c[0]);
@@ -352,6 +353,7 @@ void startup_motors() {
 
 void moveToPos_mm(float pos[2]) {
   // convert coords (mm) to steps and round to closest number of steps
+//  Serial.println(getStepsXY(pos[0]));
   int steps[2] = {getStepsXY(pos[0]), getStepsXY(pos[1])};
   moveSteps(steps, false);
 }
@@ -395,7 +397,9 @@ void lowerZ() {
 
 // Get number of steps needed to move a certain distance along x or y axis
 int getStepsXY(float distance) {
-  int steps = round(distance * stepsPerRevolutionXY / screw_lead );
+//  float non_whole_steps = distance * stepsPerRevolutionXY / screw_lead;
+//  Serial.println(non_whole_steps);
+  int steps = round(distance * stepsPerRevolutionXY / screw_lead);
   return steps;
 }
 

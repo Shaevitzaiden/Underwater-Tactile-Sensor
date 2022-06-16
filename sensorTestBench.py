@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 import time
-from tracemalloc import start
-from async_timeout import timeout
 import serial
 import matplotlib.pyplot as plt
 import numpy as np
+import atexit
 import sys
 
 from myVizTools import LiveHeatmap
@@ -23,27 +22,37 @@ class SensorTestBench():
         self.position = (0, 0)
         self.home_offsets = (0, 0)
         self.z = "lowered"
-        self.sensor_calibration = np.zeros((4,2))
+        self.sensor_calibration = np.zeros((8,))
         self.stored_data = None
         self.sensor_zero_offset = np.array([3+10.5, 3+4]) # mm in x and y
+        print("pre register")
+        atexit.register(self.cleanup)
+        print("post register")
 
     def run_test_sequence(self, sample_locs, points_per_loc=1, delay=1):
         self.stored_data = np.zeros((len(sample_locs), 8+1+1+1+2))
         self.moveZ("raise")
         self.moveOffLimitSwitches()
-        if self.sensor_calibration[0,0] == 0:
+        if self.sensor_calibration[0] == 0:
             self.getSensorCalibration()
         for i, loc in enumerate(sample_locs):
             self.moveToPos(loc)
+            print("lowering")
             self.moveZ("lower")
-            self.stored_data[i,0:2] = loc
+            self.stored_data[i,0:2] = [loc[0]-self.sensor_zero_offset[0], loc[1]-self.sensor_zero_offset[1]]
             time.sleep(delay)
-            for p in range(points_per_loc):
-                _, sens_data = self.getSensorData()
-                print(sens_data)
-                self.stored_data[i,2:10] = sens_data.flatten()
-                print(self.stored_data[i])
-            self.moveZ("raise")
+            
+            _, sens_data = self.getSensorData()
+            print(sens_data)
+            self.stored_data[i,2:10] = sens_data
+            print(self.stored_data[i])
+            time.sleep(0.1)
+            # for p in range(points_per_loc):
+            #     _, sens_data = self.getSensorData()
+            #     print(sens_data)
+            #     self.stored_data[i,2:10] = sens_data
+            #     print(self.stored_data[i])
+            # self.moveZ("raise")
         self.moveToPos((0,0))
         self.moveZ("lower")
         return self.stored_data
@@ -53,12 +62,6 @@ class SensorTestBench():
         startup = self.msgConfirmation(10)
         print("Coms up")
         if startup:
-            # motors_ready = self.msgConfirmation(11, timeout=10)
-            # print("Motors ready")
-            # if motors_ready:
-            #     sensor_ready = self.msgConfirmation(12, timeout=3)
-            #     if sensor_ready:
-            #         return True
             sensor_ready = self.msgConfirmation(12, timeout=3)
             if sensor_ready:
                 return True
@@ -88,7 +91,7 @@ class SensorTestBench():
             confirmation = self.msgConfirmation(msg[0])
         return confirmation
 
-    def msgConfirmation(self, msgToBeReceived, timeout=100):
+    def msgConfirmation(self, msgToBeReceived, timeout=8):
         t1 = time.time()
         while (time.time() - t1) < timeout:
             if self.arduino.in_waiting > 0:
@@ -105,17 +108,6 @@ class SensorTestBench():
             self.home_offsets = (offsets[0], offsets[1])
             return offsets
         return None
-
-    # def runDemo(self):
-    #     started = self.sendSerialMSG([4,0,0])
-    #     if started:
-    #         print("Successfully started")
-    #         finished = self.msgConfirmation(2, timeout=30)
-    #         if finished:
-    #             print("Successfully finished")
-    #             return True
-    #     print("Failed to complete")
-    #     return False
 
     def moveZ(self, action):
         if (action == "raise") and (self.z != "raised"):
@@ -134,13 +126,14 @@ class SensorTestBench():
         if self.z != "raised":
             self.moveZ("raise")
         # Send and confirm that command initiated
-        start_motion = self.sendSerialMSG([2,pos[0],pos[1]])
+        start_motion = self.sendSerialMSG([2,10*pos[0],10*pos[1]]) # Multiplied by 10 as decimal would be lost in transfer, divided on arduino side to retain precision
         is_finished = False
         if start_motion:
             print("motion started to", pos)
             finished_motion = self.msgConfirmation(2)
+            loc_reached = self.receiveVectorData()
             if finished_motion:
-                print("motion finished to", pos)
+                print("motion reached ", loc_reached)
                 is_finished = True
             else:
                 print("motion failed to finish")
@@ -181,9 +174,10 @@ class SensorTestBench():
         ready = self.sendSerialMSG([1,0,0])
         if ready:
             _, rawData = self.receiveVectorData()
-            reshapedData = np.zeros((4,2))
-            reshapedData[:,1] = rawData[0:4]
-            reshapedData[:,0] = np.flip(rawData[4:])
+            # reshapedData = np.zeros((4,2))
+            # reshapedData[:,1] = rawData[0:4]
+            # reshapedData[:,0] = np.flip(rawData[4:])
+            reshapedData = rawData
             processedData = reshapedData/10*0.0145
             processedData -= self.sensor_calibration
             return True, processedData
@@ -200,12 +194,12 @@ class SensorTestBench():
         self.sensor_calibration = calibration
         return calibration
 
-    def writeToCSV(self, title="test_data\\test1.csv"):
+    def writeToCSV(self, title="test_data\\test_0.5mm.csv"):
         with open (title, 'w') as file:
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data\\test1.npy"):
+    def saveArray(self, title="test_data\\test_0.5mm.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas):
@@ -222,6 +216,8 @@ class SensorTestBench():
                 target_points.append((x_range[j]+x_offset, y_range[i]+y_offset))
         return target_points
 
+    def cleanup(self):
+        self.moveZ("lower")
 
 
 
@@ -231,14 +227,14 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # time.sleep(10)
     
-    # test_bench.moveToPos((14,7))
+    # test_bench.moveToPos(-test_bench.sensor_zero_offset)
     # test_bench.moveZ("lower")
     # time.sleep(4)
     # test_bench.moveToPos((0,0))
     # test_bench.moveZ("lower")
 
 
-    # locs = test_bench.get_grid_points((4,4), (2,2))
+    # test_bench.moveToPos(test_bench.sensor_zero_offset)
     locs = test_bench.get_grid_points((9,19.5), (0.5,0.5))
     test_bench.run_test_sequence(locs)
     test_bench.saveArray()
