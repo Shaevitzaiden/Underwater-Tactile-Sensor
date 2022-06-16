@@ -25,13 +25,13 @@ class SensorTestBench():
         self.z = "lowered"
         self.sensor_calibration = np.zeros((4,2))
         self.stored_data = None
-        self.sensor_zero_offset = np.array([3+11, 3+11]) # mm in x and y
+        self.sensor_zero_offset = np.array([3+10.5, 3+4]) # mm in x and y
 
     def run_test_sequence(self, sample_locs, points_per_loc=1, delay=1):
         self.stored_data = np.zeros((len(sample_locs), 8+1+1+1+2))
         self.moveZ("raise")
         self.moveOffLimitSwitches()
-        if self.sensor_calibration is None:
+        if self.sensor_calibration[0,0] == 0:
             self.getSensorCalibration()
         for i, loc in enumerate(sample_locs):
             self.moveToPos(loc)
@@ -40,7 +40,9 @@ class SensorTestBench():
             time.sleep(delay)
             for p in range(points_per_loc):
                 _, sens_data = self.getSensorData()
+                print(sens_data)
                 self.stored_data[i,2:10] = sens_data.flatten()
+                print(self.stored_data[i])
             self.moveZ("raise")
         self.moveToPos((0,0))
         self.moveZ("lower")
@@ -150,7 +152,7 @@ class SensorTestBench():
         if self.z != "raised":
             self.moveZ("raise")
         # Send and confirm that command initiated
-        start_motion = self.sendSerialMSG([3,steps[0],steps[1]*-1])
+        start_motion = self.sendSerialMSG([3,steps[0],steps[1]])
         is_finished = False
         if start_motion:
             print("motion started")
@@ -178,14 +180,6 @@ class SensorTestBench():
     def getSensorData(self, timeout=1):
         ready = self.sendSerialMSG([1,0,0])
         if ready:
-            # reshapedData = np.zeros((4,2))
-            # t1 = time.time()
-            # while (time.time()-t1) < timeout:
-            #     if self.arduino.in_waiting > 0:
-            #         inData = self.arduino.read_until().decode().split(",") 
-            #         if inData[0] == '':
-            #             return False, None
-            #         rawData = np.array([int(i) for i in inData], dtype=np.float64)
             _, rawData = self.receiveVectorData()
             reshapedData = np.zeros((4,2))
             reshapedData[:,1] = rawData[0:4]
@@ -236,20 +230,19 @@ if __name__ == "__main__":
     # test_bench.sendSerialMSG([6,9,9])
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # time.sleep(10)
-    test_bench.moveToPos((10,10))
-    test_bench.moveZ("lower")
-    time.sleep(4)
-    test_bench.moveToPos((0,0))
-    test_bench.moveZ("lower")
-
+    
+    # test_bench.moveToPos((14,7))
+    # test_bench.moveZ("lower")
+    # time.sleep(4)
+    # test_bench.moveToPos((0,0))
     # test_bench.moveZ("lower")
 
-    locs = test_bench.get_grid_points((6,6), (1,1))
-    print(locs)
-    # locs = test_bench.get_grid_points((10,28), (1,1))
-    # test_bench.run_test_sequence(locs)
-    # test_bench.saveArray()
-    # test_bench.writeToCSV()
+
+    # locs = test_bench.get_grid_points((4,4), (2,2))
+    locs = test_bench.get_grid_points((9,19.5), (0.5,0.5))
+    test_bench.run_test_sequence(locs)
+    test_bench.saveArray()
+    test_bench.writeToCSV()
     
     
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
@@ -260,3 +253,21 @@ if __name__ == "__main__":
     # # test_bench.moveZ("raise")
     # # test_bench.moveOffLimitSwitches()
     # test_bench.moveZ("lower")
+    
+#------------------------------------------------------
+#     cal = test_bench.getSensorCalibration()
+#     heatmap = LiveHeatmap()
+#     heatmap.create_heat_map()
+#     heatmap.add_title("Tactile Sensor Visualization")
+# #     saved = False
+#     i = 0
+#     iterations = 1000
+# #     store_data = np.zeros((iterations,8))
+#     while i<iterations:
+#         msg_status, sens_data = test_bench.getSensorData()
+#         time.sleep(0.005)
+#         if msg_status != False:
+#             print(sens_data)
+#             heatmap.update_map(sens_data, scale=2)
+
+#         i += 1  

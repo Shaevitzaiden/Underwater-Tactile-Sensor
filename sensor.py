@@ -7,7 +7,7 @@ import numpy as np
 
 from myVizTools import LiveHeatmap
 
-arduino = serial.Serial(port="COM3", baudrate=115200, timeout=0.1)
+arduino = serial.Serial(port="COM4", baudrate=115200, timeout=0.1)
 
 
     
@@ -65,16 +65,26 @@ def msgConfirmation(msgToBeReceived, timeout=100):
                 return True
     return False
 
+# def startup(delay=100, timeout=3):
+#     start_time = time.time()
+#     while True:
+#         if arduino.in_waiting > 0:
+#             inByte = int(arduino.read_until().decode())
+#             if inByte == 1:
+#                 print("startup successful")
+#                 return True
+#         elif (time.time()-start_time) > timeout:
+#             return False
+
 def startup(delay=100, timeout=3):
-    start_time = time.time()
-    while True:
-        if arduino.in_waiting > 0:
-            inByte = int(arduino.read_until().decode())
-            if inByte == 1:
-                print("startup successful")
-                return True
-        elif (time.time()-start_time) > timeout:
-            return False
+    t1 = time.time()
+    startup = msgConfirmation(10)
+    print("Coms up")
+    if startup:
+        sensor_ready = msgConfirmation(12, timeout=3)
+        if sensor_ready:
+            return True
+    return False
 
 def writeToCSV(data, title="test_data\\test1.csv"):
     with open (title, 'w') as file:
@@ -93,27 +103,27 @@ if __name__ == "__main__":
         # print("Hz = {0}".format(10/(time.time()-t1)))
 
 
-    # if ready:
-    #     print("starting program")
-    #     cal = getCalibration()
-        # heatmap = LiveHeatmap()
-        # heatmap.create_heat_map()
-        # heatmap.add_title("Tactile Sensor Visualization")
-        saved = False
+    if ready:
+        print("starting program")
+        cal = getCalibration()
+        heatmap = LiveHeatmap()
+        heatmap.create_heat_map()
+        heatmap.add_title("Tactile Sensor Visualization")
+    #     saved = False
         i = 0
-        iterations = 10
-        store_data = np.zeros((iterations,8))
+        iterations = 1000
+    #     store_data = np.zeros((iterations,8))
         while i<iterations:
             
-    #         # writeCommand("run")
+    # #         # writeCommand("run")
             msg_status, sens_data = getSensorData(calibration=cal)
             time.sleep(0.005)
             if msg_status != False:
-                store_data[i] = sens_data.flatten()
-                # heatmap.update_map(sens_data, scale=2)
-                # write to csv file      
+                # store_data[i] = sens_data.flatten()
+                heatmap.update_map(sens_data, scale=2)
+    #             # write to csv file      
             i += 1  
-        writeToCSV(store_data)
+    #     writeToCSV(store_data)
 
     else:
         print("failed to startup")
