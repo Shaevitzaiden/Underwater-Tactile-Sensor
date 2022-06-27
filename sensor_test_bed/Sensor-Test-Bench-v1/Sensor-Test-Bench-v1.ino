@@ -47,7 +47,7 @@ void setup()
 {
   Wire.begin();
   delay(10);
-  
+
   Serial.begin(115200);
   clearInputBuffer();
   Serial.println("10");
@@ -71,12 +71,12 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(19), limit_switch_y2, CHANGE);
 
   // Slightly back off of limit switches if pressed and lift carriage
-//  startup_motors();
-//  Serial.println("11");
+  //  startup_motors();
+  //  Serial.println("11");
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
 
 
   byte c_addr[6] = {0xA2, 0xA4, 0xA6, 0xA8, 0xAA, 0xAC}; // C1-C6 calibration value addresses
@@ -146,19 +146,19 @@ void parseCommands() {
   if (newData == true) {
     // Parse other values
     int len = strlen(receivedChars);
-//    Serial.println(len);
-//    Serial.println(receivedChars);
+    //    Serial.println(len);
+    //    Serial.println(receivedChars);
     for (int i = 0; i < len + 1; i++) {
       if ((receivedChars[i] != ',') && (i != len)) {
         temp[t_idx] = receivedChars[i];
-//        Serial.print("temp0 "); Serial.println(temp);
+        //        Serial.print("temp0 "); Serial.println(temp);
         t_idx++;
       }
       else {
         temp[t_idx] = '\0';
-//        Serial.print("temp "); Serial.println(temp[t_idx]); // Serial.print(" "); Serial.println(temp[t_id]);
+        //        Serial.print("temp "); Serial.println(temp[t_idx]); // Serial.print(" "); Serial.println(temp[t_id]);
         c[c_idx] = atoi(temp);
-//        Serial.println(c[c_idx]);
+        //        Serial.println(c[c_idx]);
         c_idx++;
         t_idx = 0;
         char temp[32] = {};
@@ -170,12 +170,16 @@ void parseCommands() {
     }
     else if (c[0] == 1) {
       Serial.println(c[0]);
-      writeSensorData();
+      bool get_temp = false;
+      if (c[1] == 1){
+        get_temp = true;
+        }
+      writeSensorData(get_temp);
     }
     else if (c[0] == 2) {
       Serial.println(c[0]);
-      float coords[2] = {c[1]/10.0, c[2]/10.0};
-//      Serial.print(coords[0]); Serial.print("  "); Serial.println(coords[1]);
+      float coords[2] = {c[1] / 10.0, c[2] / 10.0};
+      //      Serial.print(coords[0]); Serial.print("  "); Serial.println(coords[1]);
       moveToPos_mm(coords);
       Serial.println(c[0]);
       Serial.print((int) stepperX.currentPosition()); Serial.print(", "); Serial.println((int) stepperY.currentPosition());
@@ -333,7 +337,7 @@ void startup_motors() {
 
   int ls_steps = getStepsXY(10.0);
   int steps[2] = {0, 0};
-//  raiseZ();
+  //  raiseZ();
   // Check for any triggered limit switches and backoff
   if (sy1) {
     steps[1] = -ls_steps;
@@ -353,7 +357,7 @@ void startup_motors() {
 
 void moveToPos_mm(float pos[2]) {
   // convert coords (mm) to steps and round to closest number of steps
-//  Serial.println(getStepsXY(pos[0]));
+  //  Serial.println(getStepsXY(pos[0]));
   int steps[2] = {getStepsXY(pos[0]), getStepsXY(pos[1])};
   moveSteps(steps, false);
 }
@@ -397,8 +401,8 @@ void lowerZ() {
 
 // Get number of steps needed to move a certain distance along x or y axis
 int getStepsXY(float distance) {
-//  float non_whole_steps = distance * stepsPerRevolutionXY / screw_lead;
-//  Serial.println(non_whole_steps);
+  //  float non_whole_steps = distance * stepsPerRevolutionXY / screw_lead;
+  //  Serial.println(non_whole_steps);
   int steps = round(distance * stepsPerRevolutionXY / screw_lead);
   return steps;
 }
@@ -486,22 +490,35 @@ void limit_switch_y2() {
 ///////////////////////////// SENSOR CODES ///////////////////////////////////
 
 
-void writeSensorData() {
+void writeSensorData(bool get_temp) {
   int32_t P[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-  getSensorData(P);
-  for (int i = 0; i < 7; i++) {
-    Serial.print(P[i]); Serial.print(", ");
+  int32_t T[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  getSensorData(P, T);
+  if (get_temp) {
+    for (int i = 0; i < 8; i++) {
+      Serial.print(P[i]); Serial.print(", ");
+    }
+    for (int i = 0; i < 7; i++) {
+      Serial.print(T[i]); Serial.print(", ");
+    }
+    Serial.println(T[7]);
   }
-  Serial.println(P[7]);
+  else {
+    for (int i = 0; i < 7; i++) {
+      Serial.print(P[i]); Serial.print(", ");
+    }
+    Serial.println(P[7]);
+  }
 }
 
-void getSensorData(int32_t *p_array) {
+void getSensorData(int32_t *p_array, int32_t *t_array) {
   for (int i = 0; i < 8; i++) {
     uint32_t pressure = digital_pressure_val(i);
     uint32_t temperature = digital_temperature_val(i);
 
     int32_t dT = temperature - (c[i][4] * pow(2, 8));
     int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
+    t_array[i] = TEMP;
 
     int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
     int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);

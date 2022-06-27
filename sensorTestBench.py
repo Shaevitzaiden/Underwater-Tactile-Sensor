@@ -30,22 +30,38 @@ class SensorTestBench():
         print("post register")
 
     def run_test_sequence(self, sample_locs, points_per_loc=1, delay=1):
-        self.stored_data = np.zeros((len(sample_locs), 8+1+1+1+2))
+        # x, y, [p0, p1, p2, p3, p4, p5, p6, p7], p_amb, temp 
+        self.stored_data = np.zeros((len(sample_locs), 2+8+1+1))
+        
+        # Raise carriage at start
         self.moveZ("raise")
+
+        # Move axes away from limit switches if applicable
         self.moveOffLimitSwitches()
+
+        # Get a sensor calibration
         if self.sensor_calibration[0] == 0:
             self.getSensorCalibration()
+        
+        # Loop through a series of locations and take samples
         for i, loc in enumerate(sample_locs):
+            # Move sensor into position (x,y)
             self.moveToPos(loc)
-            print("lowering")
-            self.moveZ("lower")
             self.stored_data[i,0:2] = [loc[0]-self.sensor_zero_offset[0], loc[1]-self.sensor_zero_offset[1]]
+
+            # Get ambient pressure of silicone by averaging all 8 sensors
+            _, sens_data = self.getSensorData()
+            p_amb = np.mean(sens_data)
+            self.stored_data[i,10] = p_amb
+            
+            # Lower carriage for measurement
+            self.moveZ("lower")
             time.sleep(delay)
             
-            _, sens_data = self.getSensorData()
-            print(sens_data)
-            self.stored_data[i,2:10] = sens_data
-            print(self.stored_data[i])
+            _, sens_data = self.getSensorData(get_temp=True)
+            self.stored_data[i,2:10] = sens_data[0:8]
+            self.stored_data[i, 11] = np.mean(sens_data[8:])
+            # print(self.stored_data[i])
             time.sleep(0.1)
             # for p in range(points_per_loc):
             #     _, sens_data = self.getSensorData()
@@ -53,6 +69,8 @@ class SensorTestBench():
             #     self.stored_data[i,2:10] = sens_data
             #     print(self.stored_data[i])
             # self.moveZ("raise")
+        
+        # Move back to home position and lower
         self.moveToPos((0,0))
         self.moveZ("lower")
         return self.stored_data
@@ -170,16 +188,23 @@ class SensorTestBench():
                 return True, rawData
         return False, None
 
-    def getSensorData(self, timeout=1):
-        ready = self.sendSerialMSG([1,0,0])
+    def getSensorData(self, get_temp=False, timeout=1):
+        if get_temp:
+            ready = self.sendSerialMSG([1,1,0])
+        else:
+            ready = self.sendSerialMSG([1,0,0]) 
+        
         if ready:
             _, rawData = self.receiveVectorData()
-            # reshapedData = np.zeros((4,2))
-            # reshapedData[:,1] = rawData[0:4]
-            # reshapedData[:,0] = np.flip(rawData[4:])
-            reshapedData = rawData
-            processedData = reshapedData/10*0.0145
-            processedData -= self.sensor_calibration
+            processedData = np.zeros(rawData.shape)
+            
+            # Conversion from mbar to psi and apply calibration
+            processedData[0:8] = rawData[0:8]/10*0.0145    # PSI
+            processedData[0:8] -= self.sensor_calibration
+            
+            # Return temp data as well
+            if get_temp:
+                processedData[8:] = rawData[8:]/100 # Degrees Celsius
             return True, processedData
         return False, None 
 
