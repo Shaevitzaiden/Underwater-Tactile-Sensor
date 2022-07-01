@@ -179,10 +179,10 @@ void parseCommands() {
     else if (c[0] == 2) {
       Serial.println(c[0]);
       float coords[2] = {c[1] / 10.0, c[2] / 10.0};
-      //      Serial.print(coords[0]); Serial.print("  "); Serial.println(coords[1]);
+//      Serial.print(coords[0]); Serial.print("  "); Serial.println(coords[1]);
       moveToPos_mm(coords);
       Serial.println(c[0]);
-      Serial.print((int) stepperX.currentPosition()); Serial.print(", "); Serial.println((int) stepperY.currentPosition());
+//      Serial.print((int) stepperX.currentPosition()); Serial.print(", "); Serial.println((int) stepperY.currentPosition());
     }
     else if (c[0] == 3) {
       Serial.println(c[0]);
@@ -386,7 +386,7 @@ void moveSteps(int steps[2], bool ignore_ls) {
 }
 
 void raiseZ() {
-  stepperZ.moveTo(110);
+  stepperZ.moveTo(-40);
   while (stepperZ.distanceToGo() != 0) {
     stepperZ.run();
   }

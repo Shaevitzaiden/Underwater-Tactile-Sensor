@@ -24,7 +24,8 @@ class SensorTestBench():
         self.z = "lowered"
         self.sensor_calibration = np.zeros((8,))
         self.stored_data = None
-        self.sensor_zero_offset = np.array([3+10.5, 3+4]) # mm in x and y
+        self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
+        # self.sensor_zero_offset = np.array([3+8.9+2.5/2, 3+4]) # mm in x and y
         print("pre register")
         atexit.register(self.cleanup)
         print("post register")
@@ -50,7 +51,11 @@ class SensorTestBench():
             self.stored_data[i,0:2] = [loc[0]-self.sensor_zero_offset[0], loc[1]-self.sensor_zero_offset[1]]
 
             # Get ambient pressure of silicone by averaging all 8 sensors
-            _, sens_data = self.getSensorData()
+            received, sens_data = self.getSensorData()
+            while not received:
+                received, sens_data = self.getSensorData()
+                print("attempting to collect sensor data")
+            print("received ambient pressure data")
             p_amb = np.mean(sens_data)
             self.stored_data[i,10] = p_amb
             
@@ -58,7 +63,12 @@ class SensorTestBench():
             self.moveZ("lower")
             time.sleep(delay)
             
-            _, sens_data = self.getSensorData(get_temp=True)
+            received, sens_data = self.getSensorData(get_temp=True)
+            while not received:
+                received, sens_data = self.getSensorData(get_temp=True)
+                print("attempting to collect sensor data")
+            print("received cointact pressure data and sensor data")
+            
             self.stored_data[i,2:10] = sens_data[0:8]
             self.stored_data[i, 11] = np.mean(sens_data[8:])
             # print(self.stored_data[i])
@@ -149,9 +159,9 @@ class SensorTestBench():
         if start_motion:
             print("motion started to", pos)
             finished_motion = self.msgConfirmation(2)
-            loc_reached = self.receiveVectorData()
+            # loc_reached = self.receiveVectorData()
             if finished_motion:
-                print("motion reached ", loc_reached)
+                # print("motion reached ", loc_reached)
                 is_finished = True
             else:
                 print("motion failed to finish")
@@ -182,6 +192,7 @@ class SensorTestBench():
         while (time.time()-t1) < timeout:
             if self.arduino.in_waiting > 0:
                 inData = self.arduino.read_until().decode().split(",") 
+                print(inData)
                 if inData[0] == '':
                     return False, None
                 rawData = np.array([int(i) for i in inData], dtype=np.float64)
@@ -189,13 +200,17 @@ class SensorTestBench():
         return False, None
 
     def getSensorData(self, get_temp=False, timeout=1):
+        t0 = time.time()
         if get_temp:
             ready = self.sendSerialMSG([1,1,0])
         else:
             ready = self.sendSerialMSG([1,0,0]) 
         
         if ready:
-            _, rawData = self.receiveVectorData()
+            received, rawData = self.receiveVectorData()
+            print(received, rawData)
+            if received is False:
+                return False, None
             processedData = np.zeros(rawData.shape)
             
             # Conversion from mbar to psi and apply calibration
@@ -248,6 +263,7 @@ class SensorTestBench():
 
 if __name__ == "__main__":
     test_bench = SensorTestBench()
+    
     # test_bench.sendSerialMSG([6,9,9])
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # time.sleep(10)
@@ -260,10 +276,13 @@ if __name__ == "__main__":
 
 
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
-    locs = test_bench.get_grid_points((9,19.5), (0.5,0.5))
+    # --------------------------------------------------------
+    # locs = test_bench.get_grid_points((9,19.5), (0.5,0.5))
+    locs = test_bench.get_grid_points((9,19.5), (1,1))
     test_bench.run_test_sequence(locs)
     test_bench.saveArray()
     test_bench.writeToCSV()
+    # --------------------------------------------------------
     
     
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
