@@ -54,32 +54,21 @@ class SensorTestBench():
 
             # Get ambient pressure of silicone by averaging all 8 sensors
             time.sleep(0.1)
-            received, sens_data = self.getSensorData()
-            while received is False:
-                time.sleep(0.1)
-                self.clean_inbox()
-                self.restart()
-                received, sens_data = self.getSensorData()
-                print("attempting to collect sensor data")
-            print("received ambient pressure data")
-            p_amb = np.mean(sens_data)
+            received, sens_data_p = self.getSensorData()
+            p_amb = np.mean(sens_data_p)
             self.stored_data[i,10] = p_amb
             
             # Lower carriage for measurement
             self.moveZ("lower")
             time.sleep(delay)
             
-            received, sens_data = self.getSensorData(get_temp=True)
-            while received is False:
-                time.sleep(0.1)
-                self.clean_inbox()
-                self.restart()
-                received, sens_data = self.getSensorData(get_temp=True)
-                print("attempting to collect sensor data")
+            received, sens_data_p = self.getSensorData()
+            time.sleep(0.1)
+            received, sens_data_t = self.getSensorData(get_temp=True)
             print("received contact pressure data and sensor data")
             
-            self.stored_data[i,2:10] = sens_data[0:8]
-            self.stored_data[i, 11] = np.mean(sens_data[8:])
+            self.stored_data[i,2:10] = sens_data_p[0:8]
+            self.stored_data[i, 11] = np.mean(sens_data_t[8:])
             # print(self.stored_data[i])
             time.sleep(0.1)
             # for p in range(points_per_loc):
@@ -93,19 +82,7 @@ class SensorTestBench():
         self.moveToPos((0,0))
         self.moveZ("lower")
         return self.stored_data
-    
-    def restart(self):
-        print("resetting")
-        self.arduino.close()
-        time.sleep(2)
-        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
-        ready = self.startup()
-        if ready:
-            print("reset succesfful")
-            self.sendSerialMSG([8,self.position[0],self.position[1]])
-            print("updated positions in arduino")
             
-
     def startup(self, delay=10, timeout=3):
         t1 = time.time()
         startup = self.msgConfirmation(10)
@@ -245,13 +222,12 @@ class SensorTestBench():
                 return False, None
             processedData = np.zeros(rawData.shape)
             
-            # Conversion from mbar to psi and apply calibration
-            processedData[0:8] = rawData[0:8]/10*0.0145    # PSI
-            processedData[0:8] -= self.sensor_calibration
-            
-            # Return temp data as well
             if get_temp:
                 processedData[8:] = rawData[8:]/100 # Degrees Celsius
+            else:
+                # Conversion from mbar to psi and apply calibration
+                processedData[0:8] = rawData[0:8]/10*0.0145    # PSI
+                processedData[0:8] -= self.sensor_calibration
             return True, processedData
         print("Sensor did not receive request for data")
         return False, None 
@@ -313,7 +289,7 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # --------------------------------------------------------
     # locs = test_bench.get_grid_points((9,19.5), (0.5,0.5))
-    locs = test_bench.get_grid_points((9,19.5), (3,3))
+    locs = test_bench.get_grid_points((9,19.5), (3,3)) 
     test_bench.run_test_sequence(locs)
     test_bench.saveArray()
     test_bench.writeToCSV()
