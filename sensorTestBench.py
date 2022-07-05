@@ -12,20 +12,21 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM4", baudrate=115200, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
             sys.exit()
 
         self.in_motion = False
-        self.position = (0, 0)
+        self.position = np.array([0,0])
         self.home_offsets = (0, 0)
         self.z = "lowered"
         self.sensor_calibration = np.zeros((8,))
         self.stored_data = None
-        self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
-        # self.sensor_zero_offset = np.array([3+8.9+2.5/2, 3+4]) # mm in x and y
+        # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
+        self.sensor_zero_offset = np.array([3+8.9+2.5/2, 3+4]) # mm in x and y
+        self.reset_offset = np.array([0,0])
         print("pre register")
         atexit.register(self.cleanup)
         print("post register")
@@ -41,6 +42,7 @@ class SensorTestBench():
         self.moveOffLimitSwitches()
 
         # Get a sensor calibration
+        print("Getting sensor calibration")
         if self.sensor_calibration[0] == 0:
             self.getSensorCalibration()
         
@@ -51,8 +53,12 @@ class SensorTestBench():
             self.stored_data[i,0:2] = [loc[0]-self.sensor_zero_offset[0], loc[1]-self.sensor_zero_offset[1]]
 
             # Get ambient pressure of silicone by averaging all 8 sensors
+            time.sleep(0.1)
             received, sens_data = self.getSensorData()
-            while not received:
+            while received is False:
+                time.sleep(0.1)
+                self.clean_inbox()
+                self.restart()
                 received, sens_data = self.getSensorData()
                 print("attempting to collect sensor data")
             print("received ambient pressure data")
@@ -64,10 +70,13 @@ class SensorTestBench():
             time.sleep(delay)
             
             received, sens_data = self.getSensorData(get_temp=True)
-            while not received:
+            while received is False:
+                time.sleep(0.1)
+                self.clean_inbox()
+                self.restart()
                 received, sens_data = self.getSensorData(get_temp=True)
                 print("attempting to collect sensor data")
-            print("received cointact pressure data and sensor data")
+            print("received contact pressure data and sensor data")
             
             self.stored_data[i,2:10] = sens_data[0:8]
             self.stored_data[i, 11] = np.mean(sens_data[8:])
@@ -84,8 +93,20 @@ class SensorTestBench():
         self.moveToPos((0,0))
         self.moveZ("lower")
         return self.stored_data
+    
+    def restart(self):
+        print("resetting")
+        self.arduino.close()
+        time.sleep(2)
+        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        ready = self.startup()
+        if ready:
+            print("reset succesfful")
+            self.sendSerialMSG([8,self.position[0],self.position[1]])
+            print("updated positions in arduino")
+            
 
-    def startup(self, delay=100, timeout=3):
+    def startup(self, delay=10, timeout=3):
         t1 = time.time()
         startup = self.msgConfirmation(10)
         print("Coms up")
@@ -95,6 +116,12 @@ class SensorTestBench():
                 return True
         return False
     
+    def clean_inbox(self):
+        print("--------------- emptying input buffer -------------------")
+        while self.arduino.in_waiting > 0:
+            msg = self.arduino.read_all()
+        print("--------------- Finished Emptying --------------")
+
     def moveOffLimitSwitches(self):
         if self.z != "raised":
             self.moveZ("raise")
@@ -105,7 +132,7 @@ class SensorTestBench():
                 return True
             return False
 
-    def sendSerialMSG(self, msg, begin_delimiter="<", end_delimiter=">", timeout=100):
+    def sendSerialMSG(self, msg, begin_delimiter="<", end_delimiter=">", timeout=1):
         """ Send msg by serial line, expects to recieve the same message back as confirmation"""
         t1 = time.time()
         msg_str = "{0}{1},{2},{3}{4}".format(begin_delimiter, msg[0], msg[1], msg[2], end_delimiter)
@@ -161,7 +188,9 @@ class SensorTestBench():
             finished_motion = self.msgConfirmation(2)
             # loc_reached = self.receiveVectorData()
             if finished_motion:
-                # print("motion reached ", loc_reached)
+                print("motion finished")
+                self.position = pos
+                print(pos)
                 is_finished = True
             else:
                 print("motion failed to finish")
@@ -200,6 +229,7 @@ class SensorTestBench():
         return False, None
 
     def getSensorData(self, get_temp=False, timeout=1):
+        print("Sending sensor data request")
         t0 = time.time()
         if get_temp:
             ready = self.sendSerialMSG([1,1,0])
@@ -207,9 +237,11 @@ class SensorTestBench():
             ready = self.sendSerialMSG([1,0,0]) 
         
         if ready:
+            print("Attempting to receive sensor data")
             received, rawData = self.receiveVectorData()
             print(received, rawData)
             if received is False:
+                print("No data received")
                 return False, None
             processedData = np.zeros(rawData.shape)
             
@@ -221,12 +253,14 @@ class SensorTestBench():
             if get_temp:
                 processedData[8:] = rawData[8:]/100 # Degrees Celsius
             return True, processedData
+        print("Sensor did not receive request for data")
         return False, None 
 
     def getSensorCalibration(self):
         """ Get 1-point calibration """
         for i in range(10):
             msg_status, sens_data = self.getSensorData()
+            time.sleep(0.1)
             if i == 0:
                 calibration = sens_data
             else:
@@ -263,7 +297,8 @@ class SensorTestBench():
 
 if __name__ == "__main__":
     test_bench = SensorTestBench()
-    
+    # test_bench.moveZ("lower")
+    test_bench.moveToPos([-13.5,-7])
     # test_bench.sendSerialMSG([6,9,9])
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # time.sleep(10)
@@ -278,7 +313,7 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # --------------------------------------------------------
     # locs = test_bench.get_grid_points((9,19.5), (0.5,0.5))
-    locs = test_bench.get_grid_points((9,19.5), (1,1))
+    locs = test_bench.get_grid_points((9,19.5), (3,3))
     test_bench.run_test_sequence(locs)
     test_bench.saveArray()
     test_bench.writeToCSV()

@@ -48,7 +48,7 @@ void setup()
   Wire.begin();
   delay(10);
 
-  Serial.begin(115200);
+  Serial.begin(230400);
   clearInputBuffer();
   Serial.println("10");
 
@@ -97,6 +97,7 @@ void setup()
 
 
 void loop() {
+//  Serial.println("looping");
   recvWithStartEndMarker();
   parseCommands();
 }
@@ -218,6 +219,12 @@ void parseCommands() {
       int homeOffsets[2] = {};
       getOffset(homeOffsets);
       Serial.print(homeOffsets[0]); Serial.print(", "); Serial.println(homeOffsets[1]);
+    }
+    else if (c[0] == 8) {
+      Serial.println(c[0]);
+      int steps[2] = {getStepsXY(c[1]), getStepsXY(c[2])};
+      stepperX.setCurrentPosition(steps[0]);
+      stepperY.setCurrentPosition(steps[1]);
     }
     else if (c[0] == 9) {
       Serial.println(c[0]);
@@ -393,7 +400,7 @@ void raiseZ() {
 }
 
 void lowerZ() {
-  stepperZ.moveTo(0);
+  stepperZ.moveTo(40);
   while (stepperZ.distanceToGo() != 0) {
     stepperZ.run();
   }
@@ -512,17 +519,21 @@ void writeSensorData(bool get_temp) {
 }
 
 void getSensorData(int32_t *p_array, int32_t *t_array) {
+  long sensor_time = 0;
   for (int i = 0; i < 8; i++) {
     uint32_t pressure = digital_pressure_val(i);
+    delay(1);
     uint32_t temperature = digital_temperature_val(i);
-
+    delay(1);
+    
     int32_t dT = temperature - (c[i][4] * pow(2, 8));
     int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
     t_array[i] = TEMP;
-
+    
     int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
     int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
     p_array[i] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
+    
   }
 }
 
@@ -555,7 +566,6 @@ uint32_t read_data32(byte command) {
 
   // request bytes
   Wire.requestFrom(sensor_addr, 3);
-
   // get first byte if available
   if (Wire.available()) {
     uint32_t combined = Wire.read();
