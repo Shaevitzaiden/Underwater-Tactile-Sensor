@@ -65,10 +65,10 @@ class SensorTestBench():
             received, sens_data_p = self.getSensorData()
             time.sleep(0.1)
             received, sens_data_t = self.getSensorData(get_temp=True)
-            print("received contact pressure data and sensor data")
             
             self.stored_data[i,2:10] = sens_data_p[0:8]
-            self.stored_data[i, 11] = np.mean(sens_data_t[8:])
+            self.stored_data[i, 11] = np.mean(sens_data_t[0:8])
+            print("TEMPERATURE =", np.mean(sens_data_t[0:8]))
             # print(self.stored_data[i])
             time.sleep(0.1)
             # for p in range(points_per_loc):
@@ -223,7 +223,7 @@ class SensorTestBench():
             processedData = np.zeros(rawData.shape)
             
             if get_temp:
-                processedData[8:] = rawData[8:]/100 # Degrees Celsius
+                processedData[0:8] = rawData[0:8]/100 # Degrees Celsius
             else:
                 # Conversion from mbar to psi and apply calibration
                 processedData[0:8] = rawData[0:8]/10*0.0145    # PSI
@@ -274,7 +274,7 @@ class SensorTestBench():
 if __name__ == "__main__":
     test_bench = SensorTestBench()
     # test_bench.moveZ("lower")
-    test_bench.moveToPos([-13.5,-7])
+
     # test_bench.sendSerialMSG([6,9,9])
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # time.sleep(10)

@@ -49,6 +49,7 @@ void setup()
   delay(10);
 
   Serial.begin(230400);
+//  Serial.begin(115200);
   clearInputBuffer();
   Serial.println("10");
 
@@ -475,13 +476,13 @@ void writeSensorData(bool get_temp) {
   for (int i = 0; i < 7; i++) {
     Serial.print(S[i]); Serial.print(", ");
   }
-  Serial.println(S[7]);
+  Serial.println(97410);
 }
 
 
 void getSensorData(int32_t *s_array, bool get_temp) {
   long sensor_time = 0;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 7; i++) {
     uint32_t pressure = digital_pressure_val(i);
     uint32_t temperature = digital_temperature_val(i);
 
