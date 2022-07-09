@@ -25,7 +25,7 @@ class SensorTestBench():
         self.sensor_calibration = np.zeros((8,))
         self.stored_data = None
         # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
-        self.sensor_zero_offset = np.array([3+8.9+2.5/2, 3+4]) # mm in x and y
+        self.sensor_zero_offset = np.array([3+8.55, 3+2.15]) # mm in x and y
         self.reset_offset = np.array([0,0])
         print("pre register")
         atexit.register(self.cleanup)
@@ -50,7 +50,7 @@ class SensorTestBench():
         for i, loc in enumerate(sample_locs):
             # Move sensor into position (x,y)
             self.moveToPos(loc)
-            self.stored_data[i,0:2] = [loc[0]-self.sensor_zero_offset[0], loc[1]-self.sensor_zero_offset[1]]
+            self.stored_data[i,0:2] = [round(loc[0]-self.sensor_zero_offset[0],2), round(loc[1]-self.sensor_zero_offset[1],2)]
 
             # Get ambient pressure of silicone by averaging all 8 sensors
             time.sleep(0.1)
@@ -63,6 +63,7 @@ class SensorTestBench():
             time.sleep(delay)
             
             received, sens_data_p = self.getSensorData()
+            print(sens_data_p)
             time.sleep(0.1)
             received, sens_data_t = self.getSensorData(get_temp=True)
             
@@ -289,7 +290,7 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     # --------------------------------------------------------
     # locs = test_bench.get_grid_points((9,19.5), (0.5,0.5))
-    locs = test_bench.get_grid_points((9,19.5), (3,3)) 
+    locs = test_bench.get_grid_points((2,2), (0.5,0.5)) 
     test_bench.run_test_sequence(locs)
     test_bench.saveArray()
     test_bench.writeToCSV()
