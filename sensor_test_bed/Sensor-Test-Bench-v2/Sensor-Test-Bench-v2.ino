@@ -474,10 +474,10 @@ void limit_switch_y2() {
 void writeSensorData(bool get_temp) {
   int32_t S[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   getSensorData(S, get_temp);
-  for (int i = 0; i < 7; i++) {
-    Serial.print(S[i]); Serial.print(", ");
+  for (int i = 0; i < 8; i++) {
+    Serial.print(S[i]); Serial.print(",");
   }
-  Serial.println(S[7]);
+  Serial.print(">");
 }
 
 
