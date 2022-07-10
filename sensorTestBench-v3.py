@@ -68,7 +68,7 @@ class SensorTestBench():
 
             # Get ambient pressure of silicone by averaging all 8 sensors
             time.sleep(0.1)
-            received, sens_data_p = self.getSensorData()
+            received, sens_data_p = self.getSensorData(get_amb=True)
             p_amb = np.mean(sens_data_p)
             self.stored_data[i,10] = p_amb
             
@@ -230,7 +230,7 @@ class SensorTestBench():
                     num_str.append(inData)
         return False, None
 
-    def getSensorData(self, get_temp=False, timeout=2):
+    def getSensorData(self, get_temp=False, get_amb=False, timeout=2):
         print("Sending sensor data request")
         t0 = time.time()
         if get_temp:
@@ -251,7 +251,8 @@ class SensorTestBench():
             else:
                 # Conversion from mbar to psi and apply calibration
                 processedData[0:8] = rawData[0:8]/10*0.0145    # PSI
-                processedData[0:8] -= self.sensor_calibration
+                if not get_amb:
+                    processedData[0:8] -= self.sensor_calibration
             return True, processedData
         print("Sensor did not receive request for data")
         return False, None 
