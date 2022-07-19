@@ -486,7 +486,7 @@ void getSensorData(int32_t *s_array, bool get_temp) {
   for (int i = 0; i < 8; i++) {
     uint32_t pressure = digital_pressure_val(i);
     uint32_t temperature = digital_temperature_val(i);
-
+    
     int32_t dT = temperature - (c[i][4] * pow(2, 8));
     int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
 

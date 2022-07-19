@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
@@ -70,6 +70,7 @@ class SensorTestBench():
             time.sleep(0.1)
             received, sens_data_p = self.getSensorData(get_amb=True)
             p_amb = np.mean(sens_data_p)
+            print("AMBIENT PRESSURE =", np.mean(sens_data_p[0:8]))
             self.stored_data[i,10] = p_amb
             
             # Lower carriage for measurement
@@ -269,7 +270,7 @@ class SensorTestBench():
         self.sensor_calibration = calibration
         return calibration
 
-    def appendToCSV(self, data, title="test_data\\DS20_100g_atm_0.5mm.csv"):
+    def appendToCSV(self, data, title="test_data\\DS10_100g_atm_0.5mm_attempt2.csv"):
         with open (title, 'a') as file:
             file.write("{0}\n".format(",".join([str(val) for val in data.tolist()])))
         print("Finished appending to CSV")
@@ -324,7 +325,7 @@ if __name__ == "__main__":
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs, restart_loc=(22.5,16.5))
+    test_bench.run_test_sequence(locs)
     # test_bench.run_test_sequence(locs, restart_loc=(4.0+x_off,0+y_off))
     # --------------------------------------------------------
     
