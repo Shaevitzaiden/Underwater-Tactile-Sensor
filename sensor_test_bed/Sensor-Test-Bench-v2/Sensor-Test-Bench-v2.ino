@@ -46,7 +46,7 @@ AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper
 void setup()
 {
   Wire.begin();
-  Wire.setWireTimeout(50000); 
+//  Wire.setWireTimeout(50000); 
 
   Serial.begin(230400);
 //  Serial.begin(115200);
