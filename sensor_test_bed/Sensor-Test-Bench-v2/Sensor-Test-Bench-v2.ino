@@ -46,7 +46,7 @@ AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper
 void setup()
 {
   Wire.begin();
-  delay(10);
+//  Wire.setWireTimeout(50000); 
 
   Serial.begin(230400);
 //  Serial.begin(115200);
@@ -474,10 +474,10 @@ void limit_switch_y2() {
 void writeSensorData(bool get_temp) {
   int32_t S[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   getSensorData(S, get_temp);
-  for (int i = 0; i < 7; i++) {
-    Serial.print(S[i]); Serial.print(", ");
+  for (int i = 0; i < 8; i++) {
+    Serial.print(S[i]); Serial.print(",");
   }
-  Serial.println(S[7]);
+  Serial.print(">");
 }
 
 
@@ -486,7 +486,7 @@ void getSensorData(int32_t *s_array, bool get_temp) {
   for (int i = 0; i < 8; i++) {
     uint32_t pressure = digital_pressure_val(i);
     uint32_t temperature = digital_temperature_val(i);
-
+    
     int32_t dT = temperature - (c[i][4] * pow(2, 8));
     int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
 
