@@ -312,29 +312,29 @@ void getOffset(int *offsets) {
 
 
 void startup_motors() {
-  int sx1 = digitalRead(3);
-  int sx2 = digitalRead(2);
-  int sy1 = digitalRead(18);
-  int sy2 = digitalRead(19);
-
-  int ls_steps = getStepsXY(10.0);
-  int steps[2] = {0, 0};
-  //  raiseZ();
-  // Check for any triggered limit switches and backoff
-  if (sy1) {
-    steps[1] = -ls_steps;
-  }
-  else if (sy2) {
-    steps[1] =  ls_steps;
-  }
-  if (sx1) {
-    steps[0] =  -ls_steps;
-  }
-  else if (sx2) {
-    steps[0] =  ls_steps;
-  }
-  moveSteps(steps, true);
-
+//  int sx1 = digitalRead(3);
+//  int sx2 = digitalRead(2);
+//  int sy1 = digitalRead(18);
+//  int sy2 = digitalRead(19);
+//
+//  int ls_steps = getStepsXY(10.0);
+//  int steps[2] = {0, 0};
+//  //  raiseZ();
+//  // Check for any triggered limit switches and backoff
+//  if (sy1) {
+//    steps[1] = -ls_steps;
+//  }
+//  else if (sy2) {
+//    steps[1] =  ls_steps;
+//  }
+//  if (sx1) {
+//    steps[0] =  -ls_steps;
+//  }
+//  else if (sx2) {
+//    steps[0] =  ls_steps;
+//  }
+//  moveSteps(steps, true);
+int pass = 1;
 }
 
 void moveToPos_mm(float pos[2]) {
