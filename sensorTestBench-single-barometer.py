@@ -26,7 +26,7 @@ class SensorTestBench():
         self.sensor_calibration = np.zeros((8,))
         self.stored_data = None
         # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
-        self.sensor_zero_offset = np.array([3+9.5, 3+3]) # mm in x and y
+        self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
         self.reset_offset = np.array([0,0])
         print("pre register")
         atexit.register(self.cleanup)
@@ -45,8 +45,8 @@ class SensorTestBench():
                     sample_locs_copy.remove(loc)
             sample_locs = sample_locs_copy
         
-        # x, y, [p0, p1, p2, p3, p4, p5, p6, p7], p_amb, temp 
-        self.stored_data = np.zeros((len(sample_locs), 2+8+1+1))
+        # x, y, p_sens, p_amb, temp 
+        self.stored_data = np.zeros((len(sample_locs), 2+1+1+1))
         
         # Raise carriage at start
         self.moveZ("raise")
@@ -70,8 +70,8 @@ class SensorTestBench():
             time.sleep(0.1)
             received, sens_data_p = self.getSensorData(get_amb=True)
             p_amb = np.mean(sens_data_p)
-            print("AMBIENT PRESSURE =", np.mean(sens_data_p[0:8]))
-            self.stored_data[i,10] = p_amb
+            print("AMBIENT PRESSURE =", sens_data_p[1])
+            self.stored_data[i,3] = p_amb
             
             # Lower carriage for measurement
             self.moveZ("lower")
@@ -82,9 +82,9 @@ class SensorTestBench():
             time.sleep(0.1)
             received, sens_data_t = self.getSensorData(get_temp=True)
             
-            self.stored_data[i,2:10] = sens_data_p[0:8]
-            self.stored_data[i, 11] = np.mean(sens_data_t[0:8])
-            print("TEMPERATURE =", np.mean(sens_data_t[0:8]))
+            self.stored_data[i,2] = sens_data_p[0]
+            self.stored_data[i, 4] = sens_data_t[1]
+            print("TEMPERATURE =", sens_data_t[1])
             # print(self.stored_data[i])
             time.sleep(0.1)
             self.appendToCSV(self.stored_data[i])
@@ -248,12 +248,12 @@ class SensorTestBench():
             processedData = np.zeros(rawData.shape)
             
             if get_temp:
-                processedData[0:8] = rawData[0:8]/100 # Degrees Celsius
+                processedData[0:2] = rawData[0:2]/100 # Degrees Celsius
             else:
                 # Conversion from mbar to psi and apply calibration
-                processedData[0:8] = rawData[0:8]/10*0.0145    # PSI
+                processedData[0:2] = rawData[0:2]/10*0.0145    # PSI
                 if not get_amb:
-                    processedData[0:8] -= self.sensor_calibration
+                    processedData[0:2] -= self.sensor_calibration
             return True, processedData
         print("Sensor did not receive request for data")
         return False, None 
