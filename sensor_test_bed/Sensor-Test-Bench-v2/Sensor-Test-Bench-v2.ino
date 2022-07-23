@@ -472,9 +472,9 @@ void limit_switch_y2() {
 
 
 void writeSensorData(bool get_temp) {
-  int32_t S[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  int32_t S[2] = {0, 0};
   getSensorData(S, get_temp);
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 2; i++) {
     Serial.print(S[i]); Serial.print(",");
   }
   Serial.print(">");
@@ -483,7 +483,7 @@ void writeSensorData(bool get_temp) {
 
 void getSensorData(int32_t *s_array, bool get_temp) {
   long sensor_time = 0;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 5; i < 8; i=i+2) {
     uint32_t pressure = digital_pressure_val(i);
     uint32_t temperature = digital_temperature_val(i);
     
