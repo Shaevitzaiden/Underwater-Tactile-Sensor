@@ -180,7 +180,7 @@ void parseCommands() {
     }
     else if (c[0] == 2) {
       Serial.println(c[0]);
-      float coords[2] = {c[1] / 10.0, c[2] / 10.0};
+      float coords[2] = {c[1] / 100.0, c[2] / 100.0};
       //      Serial.print(coords[0]); Serial.print("  "); Serial.println(coords[1]);
       moveToPos_mm(coords);
       Serial.println(c[0]);
@@ -223,7 +223,7 @@ void parseCommands() {
     }
     else if (c[0] == 8) {
       Serial.println(c[0]);
-      float coords[2] = {c[1] / 10.0, c[2] / 10.0};
+      float coords[2] = {c[1] / 100.0, c[2] / 100.0};
       int steps[2] = {getStepsXY(coords[0]), getStepsXY(coords[1])};
       stepperX.setCurrentPosition(steps[0]);
       stepperY.setCurrentPosition(steps[1]);

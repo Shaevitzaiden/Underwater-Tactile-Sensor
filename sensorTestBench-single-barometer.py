@@ -282,13 +282,13 @@ class SensorTestBench():
     def saveArray(self, title="test_data\\DS20_100g_atm_0.5mm.npy"):
         np.save(title, self.stored_data)
 
-    def get_grid_points(self, dims, deltas, border_offset):
+    def get_grid_points(self, dims, deltas, border_offsets):
         # Be careful with the x_dim+dx and y_dim+dy for any non perfectly divisible dimensions by the deltas
         dx, dy = deltas
         x_dim, y_dim = dims
         x_offset, y_offset = self.sensor_zero_offset
-        x_range = np.arange(start=border_offset, stop=x_dim+dx-border_offset, step=dx)
-        y_range = np.arange(start=border_offset, stop=y_dim+dy-border_offset, step=dy)
+        x_range = np.arange(start=border_offsets[0], stop=x_dim+dx-border_offsets[1], step=dx)
+        y_range = np.arange(start=border_offsets[0], stop=y_dim+dy-border_offsets[1], step=dy)
         target_points = []
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     
     # --------------------------------------------------------
-    locs = test_bench.get_grid_points((12.46,12.46), (0.5,0.5), 0.5)
+    locs = test_bench.get_grid_points((12.46,12.46), (0.5,0.5), (0.5,0.75))
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     x_off, y_off = test_bench.sensor_zero_offset
