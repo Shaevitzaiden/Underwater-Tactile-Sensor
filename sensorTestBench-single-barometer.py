@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
@@ -178,7 +178,7 @@ class SensorTestBench():
         if self.z != "raised":
             self.moveZ("raise")
         # Send and confirm that command initiated
-        start_motion = self.sendSerialMSG([2,10*pos[0],10*pos[1]]) # Multiplied by 10 as decimal would be lost in transfer, divided on arduino side to retain precision
+        start_motion = self.sendSerialMSG([2,100*pos[0],100*pos[1]]) # Multiplied by 10 as decimal would be lost in transfer, divided on arduino side to retain precision
         is_finished = False
         if start_motion:
             print("motion started to", pos)
@@ -232,7 +232,7 @@ class SensorTestBench():
         return False, None
 
     def getSensorData(self, get_temp=False, get_amb=False, timeout=2):
-        print("Sending sensor data request")
+        # print("Sending sensor data request")
         t0 = time.time()
         if get_temp:
             ready = self.sendSerialMSG([1,1,0])
@@ -241,7 +241,7 @@ class SensorTestBench():
         
         if ready:
             received, rawData = self.receiveVectorData()
-            print(received, rawData)
+            # print(received, rawData)
             if received is False:
                 print("No data received")
                 return False, None
@@ -269,7 +269,7 @@ class SensorTestBench():
         self.sensor_calibration = calibration
         return calibration
 
-    def appendToCSV(self, data, title="test_data\\DS10_100g_atm_0.5mm_attempt2.csv"):
+    def appendToCSV(self, data, title="test_data\\DS30_100g_30PSIG_delta-0.5mm_thick-8mm-single.csv"):
         with open (title, 'a') as file:
             file.write("{0}\n".format(",".join([str(val) for val in data.tolist()])))
         print("Finished appending to CSV")
@@ -292,7 +292,7 @@ class SensorTestBench():
         target_points = []
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
-                target_points.append((x_range[j]+x_offset, y_range[i]+y_offset))
+                target_points.append((round(x_range[j]+x_offset,1), y_range[i]+y_offset))
         return target_points
 
     def cleanup(self):
@@ -320,15 +320,18 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     
     # --------------------------------------------------------
-    locs = test_bench.get_grid_points((12.46,12.46), (0.5,0.5), (0.5,0.75))
+    locs = test_bench.get_grid_points((12.46,12.46), (0.5,0.5), (0.5,0.5))
+    print(locs)
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     x_off, y_off = test_bench.sensor_zero_offset
     test_bench.run_test_sequence(locs)
-    # for i in range(100):
+    # for i in range(1000):
     #     print(i)
-    #     test_bench.getSensorData()
-
+    #     a, b = test_bench.getSensorData()
+    #     if (np.abs(b) > 20000).any():
+    #         print("error")
+            # break
     # test_bench.run_test_sequence(locs, restart_loc=(4.0+x_off,0+y_off))
     # --------------------------------------------------------
     

@@ -13,9 +13,9 @@ def get_grid_points(dims, deltas, border_offset):
         target_points = []
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
-                target_points.append((x_range[j]+x_offset, y_range[i]+y_offset))
+                target_points.append((round(x_range[j]+x_offset,1), y_range[i]+y_offset))
         return target_points
 
 
 if __name__ == "__main__":
-    print(get_grid_points((12.5,12.5),(0.5,0.5),0.5))
+    print(get_grid_points((12.42,12.42),(0.5,0.5),0.5))
