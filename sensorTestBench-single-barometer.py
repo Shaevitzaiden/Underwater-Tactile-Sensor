@@ -23,7 +23,7 @@ class SensorTestBench():
         self.position = np.array([0,0])
         self.home_offsets = (0, 0)
         self.z = "lowered"
-        self.sensor_calibration = np.zeros((8,))
+        self.sensor_calibration = np.zeros((2,))
         self.stored_data = None
         # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
         self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
@@ -68,9 +68,9 @@ class SensorTestBench():
 
             # Get ambient pressure of silicone by averaging all 8 sensors
             time.sleep(0.1)
-            received, sens_data_p = self.getSensorData(get_amb=True)
-            p_amb = np.mean(sens_data_p)
-            print("AMBIENT PRESSURE =", sens_data_p[1])
+            received, sens_data_amb = self.getSensorData(get_amb=True)
+            p_amb = sens_data_amb[0]
+            print("AMBIENT PRESSURE =", p_amb)
             self.stored_data[i,3] = p_amb
             
             # Lower carriage for measurement
@@ -78,13 +78,13 @@ class SensorTestBench():
             time.sleep(delay)
             
             received, sens_data_p = self.getSensorData()
-            print(sens_data_p)
+            # print(sens_data_p)
             time.sleep(0.1)
             received, sens_data_t = self.getSensorData(get_temp=True)
             
-            self.stored_data[i,2] = sens_data_p[0]
-            self.stored_data[i, 4] = sens_data_t[1]
-            print("TEMPERATURE =", sens_data_t[1])
+            self.stored_data[i,2] = sens_data_p[1]
+            self.stored_data[i, 4] = sens_data_t[0]
+            print("TEMPERATURE =", sens_data_t[0])
             # print(self.stored_data[i])
             time.sleep(0.1)
             self.appendToCSV(self.stored_data[i])
@@ -246,7 +246,6 @@ class SensorTestBench():
                 print("No data received")
                 return False, None
             processedData = np.zeros(rawData.shape)
-            
             if get_temp:
                 processedData[0:2] = rawData[0:2]/100 # Degrees Celsius
             else:
@@ -326,6 +325,10 @@ if __name__ == "__main__":
     # test_bench.run_test_sequence(locs) 
     x_off, y_off = test_bench.sensor_zero_offset
     test_bench.run_test_sequence(locs)
+    # for i in range(100):
+    #     print(i)
+    #     test_bench.getSensorData()
+
     # test_bench.run_test_sequence(locs, restart_loc=(4.0+x_off,0+y_off))
     # --------------------------------------------------------
     

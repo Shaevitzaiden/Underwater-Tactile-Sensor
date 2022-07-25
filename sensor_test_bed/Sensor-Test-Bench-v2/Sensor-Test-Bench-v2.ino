@@ -66,10 +66,10 @@ void setup()
   pinMode(3, INPUT_PULLUP);
   pinMode(2, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(3), limit_switch_x1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(2), limit_switch_x2, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(18), limit_switch_y1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(19), limit_switch_y2, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(3), limit_switch_x1, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(2), limit_switch_x2, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(18), limit_switch_y1, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(19), limit_switch_y2, CHANGE);
 
   // Slightly back off of limit switches if pressed and lift carriage
   //  startup_motors();
@@ -483,6 +483,7 @@ void writeSensorData(bool get_temp) {
 
 void getSensorData(int32_t *s_array, bool get_temp) {
   long sensor_time = 0;
+  int idx = 0;
   for (int i = 5; i < 8; i=i+2) {
     uint32_t pressure = digital_pressure_val(i);
     uint32_t temperature = digital_temperature_val(i);
@@ -493,11 +494,12 @@ void getSensorData(int32_t *s_array, bool get_temp) {
     int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
     int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
     if (get_temp) {
-      s_array[i] = TEMP;
+      s_array[idx] = TEMP;
     }
     else {
-      s_array[i] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
+      s_array[idx] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
     }
+    idx += 1;
   }
 }
 
