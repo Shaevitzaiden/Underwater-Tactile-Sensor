@@ -25,6 +25,7 @@ class SensorTestBench():
         self.z = "lowered"
         self.sensor_calibration = np.zeros((2,))
         self.stored_data = None
+        self.ambient = None
         # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
         self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
         self.reset_offset = np.array([0,0])
@@ -32,7 +33,7 @@ class SensorTestBench():
         atexit.register(self.cleanup)
         print("post register")
 
-    def run_test_sequence(self, sample_locs, restart_loc=None, points_per_loc=1, delay=1):
+    def run_test_sequence(self, sample_locs, restart_loc=None, samples=1, delay=1.5):
         if restart_loc != None:
             print("adjusting start location to", restart_loc)
             print(self.setStepperLocation(restart_loc))
@@ -46,7 +47,7 @@ class SensorTestBench():
             sample_locs = sample_locs_copy
         
         # x, y, p_sens, p_amb, temp 
-        self.stored_data = np.zeros((len(sample_locs), 2+1+1+1))
+        self.stored_data = np.zeros((len(sample_locs), samples, 2+1+1+1))
         
         # Raise carriage at start
         self.moveZ("raise")
@@ -57,37 +58,36 @@ class SensorTestBench():
         # Get a sensor calibration
         print("Getting sensor calibration")
         time.sleep(0.25)
-        if self.sensor_calibration[0] == 0:
-            self.getSensorCalibration()
+        # if self.sensor_calibration[0] == 0: ---------------------- switching to calibration off of current atmospheric pressure
+        #     self.getSensorCalibration()
         
         # Loop through a series of locations and take samples
         for i, loc in enumerate(sample_locs):
             # Move sensor into position (x,y)
             self.moveToPos(loc)
-            self.stored_data[i,0:2] = [round(loc[0]-self.sensor_zero_offset[0],2), round(loc[1]-self.sensor_zero_offset[1],2)]
+            self.stored_data[i,:,0:2] = [round(loc[0]-self.sensor_zero_offset[0],2), round(loc[1]-self.sensor_zero_offset[1],2)]
 
             # Get ambient pressure of silicone by averaging all 8 sensors
-            time.sleep(0.1)
-            received, sens_data_amb = self.getSensorData(get_amb=True)
-            p_amb = sens_data_amb[0]
-            print("AMBIENT PRESSURE =", p_amb)
-            self.stored_data[i,3] = p_amb
+            # time.sleep(0.1)
+            for j in range(samples):
+                received, sens_data_amb = self.getSensorData()
+                p_amb = sens_data_amb[0]
+                self.stored_data[i,j,3] = p_amb
+            print("AMBIENT PRESSURE ~=", p_amb)
             
             # Lower carriage for measurement
             self.moveZ("lower")
             time.sleep(delay)
             
-            received, sens_data_p = self.getSensorData()
-            # print(sens_data_p)
-            time.sleep(0.1)
-            received, sens_data_t = self.getSensorData(get_temp=True)
-            
-            self.stored_data[i,2] = sens_data_p[1]
-            self.stored_data[i, 4] = sens_data_t[0]
-            print("TEMPERATURE =", sens_data_t[0])
-            # print(self.stored_data[i])
-            time.sleep(0.1)
-            self.appendToCSV(self.stored_data[i])
+            for k in range(samples):
+                received, sens_data_p = self.getSensorData()
+                received, sens_data_t = self.getSensorData(get_temp=True)
+                self.stored_data[i,k,2] = sens_data_p[1]
+                self.stored_data[i,k,4] = sens_data_t[0]
+            print("TEMPERATURE ~=", sens_data_t[0])
+                # print(self.stored_data[i])
+        
+                # self.appendToCSV(self.stored_data[i])
             # for p in range(points_per_loc):
             #     _, sens_data = self.getSensorData()
             #     print(sens_data)
@@ -98,6 +98,7 @@ class SensorTestBench():
         # Move back to home position and lower
         self.moveToPos((0,0))
         self.moveZ("lower")
+        self.saveArray()
         return self.stored_data
             
     def startup(self, delay=10, timeout=3):
@@ -231,7 +232,7 @@ class SensorTestBench():
                     num_str.append(inData)
         return False, None
 
-    def getSensorData(self, get_temp=False, get_amb=False, timeout=2):
+    def getSensorData(self, get_temp=False, timeout=2):
         # print("Sending sensor data request")
         t0 = time.time()
         if get_temp:
@@ -251,8 +252,6 @@ class SensorTestBench():
             else:
                 # Conversion from mbar to psi and apply calibration
                 processedData[0:2] = rawData[0:2]/10*0.0145    # PSI
-                if not get_amb:
-                    processedData[0:2] -= self.sensor_calibration
             return True, processedData
         print("Sensor did not receive request for data")
         return False, None 
@@ -279,7 +278,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data\\DS20_100g_atm_0.5mm.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS10_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer_multi-sample.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -321,11 +320,13 @@ if __name__ == "__main__":
     
     # --------------------------------------------------------
     locs = test_bench.get_grid_points((12.46,12.46), (0.5,0.5), (0.5,0.5))
-    print(locs)
+    # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
+
+    # print(locs)
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs)
+    test_bench.run_test_sequence(locs,samples=10)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()
