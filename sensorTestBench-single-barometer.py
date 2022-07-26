@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
@@ -269,7 +269,7 @@ class SensorTestBench():
         self.sensor_calibration = calibration
         return calibration
 
-    def appendToCSV(self, data, title="test_data\\DS30_100g_30PSIG_delta-0.5mm_thick-8mm-single.csv"):
+    def appendToCSV(self, data, title="test_data\\DS20_100g_atm_delta-0.5mm_thick-8mm-single.csv"):
         with open (title, 'a') as file:
             file.write("{0}\n".format(",".join([str(val) for val in data.tolist()])))
         print("Finished appending to CSV")
