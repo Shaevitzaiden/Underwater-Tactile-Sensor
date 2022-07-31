@@ -46,10 +46,10 @@ AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper
 void setup()
 {
   Wire.begin();
-//  Wire.setWireTimeout(50000); 
+  //  Wire.setWireTimeout(50000);
 
   Serial.begin(230400);
-//  Serial.begin(115200);
+  //  Serial.begin(115200);
   clearInputBuffer();
   Serial.println("10");
 
@@ -66,10 +66,10 @@ void setup()
   pinMode(3, INPUT_PULLUP);
   pinMode(2, INPUT_PULLUP);
 
-//  attachInterrupt(digitalPinToInterrupt(3), limit_switch_x1, CHANGE);
-//  attachInterrupt(digitalPinToInterrupt(2), limit_switch_x2, CHANGE);
-//  attachInterrupt(digitalPinToInterrupt(18), limit_switch_y1, CHANGE);
-//  attachInterrupt(digitalPinToInterrupt(19), limit_switch_y2, CHANGE);
+  //  attachInterrupt(digitalPinToInterrupt(3), limit_switch_x1, CHANGE);
+  //  attachInterrupt(digitalPinToInterrupt(2), limit_switch_x2, CHANGE);
+  //  attachInterrupt(digitalPinToInterrupt(18), limit_switch_y1, CHANGE);
+  //  attachInterrupt(digitalPinToInterrupt(19), limit_switch_y2, CHANGE);
 
   // Slightly back off of limit switches if pressed and lift carriage
   //  startup_motors();
@@ -312,29 +312,29 @@ void getOffset(int *offsets) {
 
 
 void startup_motors() {
-//  int sx1 = digitalRead(3);
-//  int sx2 = digitalRead(2);
-//  int sy1 = digitalRead(18);
-//  int sy2 = digitalRead(19);
-//
-//  int ls_steps = getStepsXY(10.0);
-//  int steps[2] = {0, 0};
-//  //  raiseZ();
-//  // Check for any triggered limit switches and backoff
-//  if (sy1) {
-//    steps[1] = -ls_steps;
-//  }
-//  else if (sy2) {
-//    steps[1] =  ls_steps;
-//  }
-//  if (sx1) {
-//    steps[0] =  -ls_steps;
-//  }
-//  else if (sx2) {
-//    steps[0] =  ls_steps;
-//  }
-//  moveSteps(steps, true);
-int pass = 1;
+  //  int sx1 = digitalRead(3);
+  //  int sx2 = digitalRead(2);
+  //  int sy1 = digitalRead(18);
+  //  int sy2 = digitalRead(19);
+  //
+  //  int ls_steps = getStepsXY(10.0);
+  //  int steps[2] = {0, 0};
+  //  //  raiseZ();
+  //  // Check for any triggered limit switches and backoff
+  //  if (sy1) {
+  //    steps[1] = -ls_steps;
+  //  }
+  //  else if (sy2) {
+  //    steps[1] =  ls_steps;
+  //  }
+  //  if (sx1) {
+  //    steps[0] =  -ls_steps;
+  //  }
+  //  else if (sx2) {
+  //    steps[0] =  ls_steps;
+  //  }
+  //  moveSteps(steps, true);
+  int pass = 1;
 }
 
 void moveToPos_mm(float pos[2]) {
@@ -482,24 +482,35 @@ void writeSensorData(bool get_temp) {
 
 
 void getSensorData(int32_t *s_array, bool get_temp) {
-  long sensor_time = 0;
-  int idx = 0;
-  for (int i = 5; i < 8; i=i+2) {
-    uint32_t pressure = digital_pressure_val(i);
-    uint32_t temperature = digital_temperature_val(i);
-    
-    int32_t dT = temperature - (c[i][4] * pow(2, 8));
-    int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
+  int i = 3;
+  uint32_t pressure = digital_pressure_val(i);
+  uint32_t temperature = digital_temperature_val(i);
 
-    int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
-    int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
-    if (get_temp) {
-      s_array[idx] = TEMP;
-    }
-    else {
-      s_array[idx] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
-    }
-    idx += 1;
+  int32_t dT = temperature - (c[i][4] * pow(2, 8));
+  int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
+
+  int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
+  int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
+  if (get_temp) {
+    s_array[0] = TEMP;
+  }
+  else {
+    s_array[0] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
+  }
+  i = 7;
+  pressure = digital_pressure_val(i);
+  temperature = digital_temperature_val(i);
+
+  dT = temperature - (c[i][4] * pow(2, 8));
+  TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
+
+  OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
+  SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
+  if (get_temp) {
+    s_array[1] = TEMP;
+  }
+  else {
+    s_array[1] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
   }
 }
 
