@@ -13,7 +13,7 @@ def preprocess(data):
     data = np.mean(data, axis=1)
     print(data)
     # Shift axes with sensor location as (0,0)
-    data[:,0:2] -= 12.46/2
+    data[:,0:2] -= 15/2
     # # Flip y-axis so that direction is consistent with plot
     data = np.flip(data,axis=0)
 

@@ -6,16 +6,16 @@ def get_grid_points(dims, deltas, border_offset):
         # Be careful with the x_dim+dx and y_dim+dy for any non perfectly divisible dimensions by the deltas
         dx, dy = deltas
         x_dim, y_dim = dims
-        x_offset, y_offset = [9.42, 3] #9.42,3
+        x_offset, y_offset = [3+12.65-15/2, 3+6.23-15/2]
         x_range = np.arange(start=border_offset, stop=x_dim+dx-border_offset, step=dx)
         print(x_range)
         y_range = np.arange(start=border_offset, stop=y_dim+dy-border_offset, step=dy)
         target_points = []
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
-                target_points.append((round(x_range[j]+x_offset,1), y_range[i]+y_offset))
+                target_points.append((round(x_range[j]+x_offset,1), round(y_range[i]+y_offset,1)))
         return target_points
 
 
 if __name__ == "__main__":
-    print(get_grid_points((12.42,12.42),(0.5,0.5),0.5))
+    print(get_grid_points((15,15),(0.5,0.5),0.5))

@@ -27,7 +27,9 @@ class SensorTestBench():
         self.stored_data = None
         self.ambient = None
         # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
-        self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
+        # self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
+        self.sensor_zero_offset = np.array([3+12.65-15/2, 3+6.23-15/2]) # mm in x and y
+        
         self.reset_offset = np.array([0,0])
         print("pre register")
         atexit.register(self.cleanup)
@@ -319,14 +321,14 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     
     # --------------------------------------------------------
-    locs = test_bench.get_grid_points((12.46,12.46), (0.5,0.5), (0.5,0.5))
+    locs = test_bench.get_grid_points((15,15), (0.5,0.5), (0.5,0.5))
     # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
 
     # print(locs)
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs,samples=10)
+    test_bench.run_test_sequence(locs,samples=50)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()
