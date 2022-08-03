@@ -28,8 +28,12 @@ class SensorTestBench():
         self.ambient = None
         # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
         # self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
-        self.sensor_zero_offset = np.array([3+12.65-15/2, 3+6.23-15/2]) # mm in x and y
-        
+        self.pcb_from_reference = np.array((3, 3))
+        self.sensor_center_from_pcb = np.array((12.65, 6.23))
+        self.sensor_size = np.array((15, 15))
+        self.sensor_zero_offset = self.pcb_from_reference + self.sensor_center_from_pcb
+
+
         self.reset_offset = np.array([0,0])
         print("pre register")
         atexit.register(self.cleanup)
@@ -293,7 +297,7 @@ class SensorTestBench():
         target_points = []
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
-                target_points.append((round(x_range[j]+x_offset,1), y_range[i]+y_offset))
+                target_points.append((round(x_range[j]+x_offset-(x_dim/2),1), round(y_range[i]+y_offset-(y_dim/2),1)))
         return target_points
 
     def cleanup(self):
@@ -322,13 +326,14 @@ if __name__ == "__main__":
     
     # --------------------------------------------------------
     locs = test_bench.get_grid_points((15,15), (0.5,0.5), (0.5,0.5))
+    print(locs)
     # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
 
     # print(locs)
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
-    x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs,samples=50)
+    # x_off, y_off = test_bench.sensor_zero_offset
+    # test_bench.run_test_sequence(locs,samples=50)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()
