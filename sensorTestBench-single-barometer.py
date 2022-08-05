@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
@@ -30,7 +30,7 @@ class SensorTestBench():
         # self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
         self.pcb_from_reference = np.array((3, 3))
         self.sensor_center_from_pcb = np.array((12.65, 6.23))
-        self.sensor_size = np.array((15, 15))
+        self.sensor_size = np.array((17, 17))
         self.sensor_zero_offset = self.pcb_from_reference + self.sensor_center_from_pcb
 
 
@@ -90,6 +90,7 @@ class SensorTestBench():
                 received, sens_data_t = self.getSensorData(get_temp=True)
                 self.stored_data[i,k,2] = sens_data_p[1]
                 self.stored_data[i,k,4] = sens_data_t[0]
+            print(sens_data_p)
             print("TEMPERATURE ~=", sens_data_t[0])
                 # print(self.stored_data[i])
         
@@ -170,6 +171,7 @@ class SensorTestBench():
 
     def moveZ(self, action):
         if (action == "raise") and (self.z != "raised"):
+            print("raising")
             self.sendSerialMSG([4,0,0])
             self.z = "raised"
         if (action == "lower") and (self.z != "lowered"):
@@ -232,7 +234,7 @@ class SensorTestBench():
                     num_str = []
                 elif (inData == ">"):
                     rawData = np.array(msg, dtype=np.float64)
-                    print(rawData)
+                    # print(rawData)
                     return True, rawData
                 else:
                     num_str.append(inData)
@@ -284,7 +286,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS10_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer_multi-sample.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS10_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-17_multi-sample-50.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -325,15 +327,15 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     
     # --------------------------------------------------------
-    locs = test_bench.get_grid_points((15,15), (0.5,0.5), (0.5,0.5))
-    print(locs)
+    locs = test_bench.get_grid_points((17,17), (0.5,0.5), (0.5,0.5))
+    # print(locs)
     # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
 
     # print(locs)
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     # x_off, y_off = test_bench.sensor_zero_offset
-    # test_bench.run_test_sequence(locs,samples=50)
+    test_bench.run_test_sequence(locs,samples=25)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()
@@ -355,7 +357,7 @@ if __name__ == "__main__":
     
 #------------------------------------------------------
 #     cal = test_bench.getSensorCalibration()
-#     heatmap = LiveHeatmap()c
+#     heatmap = LiveHeatmap()
 #     heatmap.create_heat_map()
 #     heatmap.add_title("Tactile Sensor Visualization")
 # #     saved = False

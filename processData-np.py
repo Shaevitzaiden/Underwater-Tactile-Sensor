@@ -105,11 +105,11 @@ if __name__ == "__main__":
 
     # ---------------------------
     # make_heatmaps(data_10_prep, data_20_prep, data_30_prep)
-    # # make_mesh(data_10, data_20)
+    make_mesh(data_10_prep)#, data_20_prep)
     # plt.xlabel("X")
     X = data_10_prep[:,0]
     Y = data_10_prep[:,1]
-    make_std_plot([data_10, data_20, data_30], X,Y, num=1)
+    # make_std_plot([data_10, data_20, data_30], X,Y, num=1)
 
     
     plt.show()

@@ -47,7 +47,6 @@ void setup()
 {
   Wire.begin();
   //  Wire.setWireTimeout(50000);
-
   Serial.begin(230400);
   //  Serial.begin(115200);
   clearInputBuffer();
@@ -60,11 +59,11 @@ void setup()
   stepperX.setAcceleration(1000);
   stepperY.setAcceleration(1000);
   stepperZ.setAcceleration(1000);
-
-  pinMode(18, INPUT_PULLUP);
-  pinMode(19, INPUT_PULLUP);
-  pinMode(3, INPUT_PULLUP);
-  pinMode(2, INPUT_PULLUP);
+  
+//  pinMode(18, INPUT_PULLUP);
+//  pinMode(19, INPUT_PULLUP);
+//  pinMode(3, INPUT_PULLUP);
+//  pinMode(2, INPUT_PULLUP);
 
   //  attachInterrupt(digitalPinToInterrupt(3), limit_switch_x1, CHANGE);
   //  attachInterrupt(digitalPinToInterrupt(2), limit_switch_x2, CHANGE);
