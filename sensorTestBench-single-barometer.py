@@ -30,7 +30,7 @@ class SensorTestBench():
         # self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
         self.pcb_from_reference = np.array((3, 3))
         self.sensor_center_from_pcb = np.array((12.65, 6.23))
-        self.sensor_size = np.array((17, 17))
+        self.sensor_size = np.array((16,16))
         self.sensor_zero_offset = self.pcb_from_reference + self.sensor_center_from_pcb
 
 
@@ -53,7 +53,7 @@ class SensorTestBench():
             sample_locs = sample_locs_copy
         
         # x, y, p_sens, p_amb, temp 
-        self.stored_data = np.zeros((len(sample_locs), samples, 2+1+1+1))
+        self.stored_data = np.zeros((len(sample_locs), samples, 2+1+1+1+1))
         
         # Raise carriage at start
         self.moveZ("raise")
@@ -77,9 +77,9 @@ class SensorTestBench():
             # time.sleep(0.1)
             for j in range(samples):
                 received, sens_data_amb = self.getSensorData()
-                p_amb = sens_data_amb[0]
-                self.stored_data[i,j,3] = p_amb
-            print("AMBIENT PRESSURE ~=", p_amb)
+                self.stored_data[i,j,3] = sens_data_amb[1]
+                self.stored_data[i,j,4] = sens_data_amb[0]
+            print("AMBIENT PRESSURE ~=", sens_data_amb[0])
             
             # Lower carriage for measurement
             self.moveZ("lower")
@@ -89,7 +89,7 @@ class SensorTestBench():
                 received, sens_data_p = self.getSensorData()
                 received, sens_data_t = self.getSensorData(get_temp=True)
                 self.stored_data[i,k,2] = sens_data_p[1]
-                self.stored_data[i,k,4] = sens_data_t[0]
+                self.stored_data[i,k,5] = sens_data_t[0]
             print(sens_data_p)
             print("TEMPERATURE ~=", sens_data_t[0])
                 # print(self.stored_data[i])
@@ -286,7 +286,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-17_multi-sample-50.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-50.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -327,7 +327,7 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     
     # --------------------------------------------------------
-    locs = test_bench.get_grid_points((17,17), (0.5,0.5), (0.5,0.5))
+    locs = test_bench.get_grid_points((16,16), (0.5,0.5), (0.5,0.5))
     # print(locs)
     # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
 
@@ -335,7 +335,7 @@ if __name__ == "__main__":
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     # x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs,samples=25)
+    test_bench.run_test_sequence(locs,samples=50)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()
