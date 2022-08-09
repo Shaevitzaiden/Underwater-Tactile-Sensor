@@ -286,7 +286,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-50.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS30_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-25.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -300,6 +300,14 @@ class SensorTestBench():
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
                 target_points.append((round(x_range[j]+x_offset-(x_dim/2),1), round(y_range[i]+y_offset-(y_dim/2),1)))
+        return target_points
+
+    def get_line_points(self, length, delta):
+        x_range = np.arange(start=self.sensor_zero_offset[0], stop=self.sensor_zero_offset[0]+length+delta, step=delta)
+        y = self.sensor_zero_offset[1]
+        target_points = []
+        for i in range(x_range.shape[0]):
+            target_points.append((round(x_range[i],1), round(y,1)))
         return target_points
 
     def cleanup(self):
@@ -328,6 +336,7 @@ if __name__ == "__main__":
     
     # --------------------------------------------------------
     locs = test_bench.get_grid_points((16,16), (0.5,0.5), (0.5,0.5))
+    # locs = test_bench.get_line_points(8,0.5)
     # print(locs)
     # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
 
@@ -335,7 +344,7 @@ if __name__ == "__main__":
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     # x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs,samples=50)
+    test_bench.run_test_sequence(locs, samples=25)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()

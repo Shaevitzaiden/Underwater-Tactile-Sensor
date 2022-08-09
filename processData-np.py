@@ -40,12 +40,12 @@ def preprocess(bad_data):
     data = np.flip(data,axis=0)
 
     # remove any outliers --- should maybe move above so it removes unaveraged outlier points
-    outlier_idx = []
-    for i in range(data.shape[0]):
-        if np.abs(data[i,2]) > 40:
-            print("removing outlier")
-            outlier_idx.append(i)
-    data = np.delete(data,outlier_idx,axis=0)
+    # outlier_idx = []
+    # for i in range(data.shape[0]):
+    #     if np.abs(data[i,2]) > 40:
+    #         print("removing outlier")
+    #         outlier_idx.append(i)
+    # data = np.delete(data,outlier_idx,axis=0)
     return data
 
 def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"black"), fig=None, ax=None):
@@ -109,27 +109,33 @@ def make_std_plot(unprocessed_data_sets, X, Y, num=3):
         Z = stds[:,2]
         ax.plot_trisurf(X, Y, Z, color="white", edgecolors="black", alpha=0.5)
     plt.show()
-        
+
+def plot_line_series(data):
+    plt.plot(data[:,0],data[:,2])
+    plt.show()
         
 
 if __name__ == "__main__":
-    data_10 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
+    data_10 = np.load("test_data_multi-sample/DS10_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
     data_10_prep = preprocess(data_10)
+    print(data_10_prep[:,2])
+    # print(data_10[12])
+    # print(data_10_prep)
+    # plot_line_series(data_10_prep)
+    data_20 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
+    data_20_prep = preprocess(data_20)
 
-    # data_20 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-10_multi-sample-5.npy")
-    # data_20_prep = preprocess(data_20)
-
-    # data_30 = np.load("test_data_multi-sample/DS30_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-17_multi-sample-50.npy")
-    # data_30_prep = preprocess(data_30)
+    data_30 = np.load("test_data_multi-sample/DS30_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-25.npy")
+    data_30_prep = preprocess(data_30)
    
 
     # ---------------------------
-    make_heatmaps(data_10_prep, data_10_prep, data_10_prep)
-    make_mesh(data_10_prep)#, data_20_prep)
+    make_heatmaps(data_10_prep, data_20_prep, data_30_prep)
+    make_mesh(data_10_prep, data_20_prep, data_30_prep)
     # plt.xlabel("X")
     X = data_10_prep[:,0]
     Y = data_10_prep[:,1]
-    # make_std_plot([data_10, data_20, data_30], X,Y, num=1)
+    make_std_plot([data_10, data_20, data_30], X,Y, num=1)
 
     
     plt.show()
