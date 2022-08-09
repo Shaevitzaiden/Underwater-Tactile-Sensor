@@ -23,7 +23,7 @@ def remove_outliers(data):
     mean = np.mean(data)
     standard_deviation = np.std(data)
     distance_from_mean = abs(data - mean)
-    max_deviations = 1
+    max_deviations = 3
     not_outlier = distance_from_mean < max_deviations * standard_deviation
     no_outliers = data[not_outlier]
     return no_outliers
@@ -125,13 +125,13 @@ if __name__ == "__main__":
     data_20 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
     data_20_prep = preprocess(data_20)
 
-    data_30 = np.load("test_data_multi-sample/DS30_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-25.npy")
+    data_30 = np.load("test_data_multi-sample/DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
     data_30_prep = preprocess(data_30)
    
 
     # ---------------------------
     make_heatmaps(data_10_prep, data_20_prep, data_30_prep)
-    make_mesh(data_10_prep, data_20_prep, data_30_prep)
+    make_mesh(data_10_prep, data_30_prep)
     # plt.xlabel("X")
     X = data_10_prep[:,0]
     Y = data_10_prep[:,1]

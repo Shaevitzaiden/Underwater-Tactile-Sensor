@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
@@ -286,7 +286,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS30_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-25.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     # x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs, samples=25)
+    test_bench.run_test_sequence(locs, samples=5)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()
