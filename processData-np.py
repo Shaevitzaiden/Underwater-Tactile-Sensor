@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from matplotlib import projections
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -29,38 +28,35 @@ def remove_outliers(data):
     return no_outliers
 
 def preprocess(bad_data):
-    print('===========================================================================')
     bad_data[:,:,2] = bad_data[:,:,2].copy() - bad_data[:,:,3].copy()
     data = np.zeros((bad_data.shape[0],bad_data.shape[2]))
     for i, set in enumerate(bad_data[:]):
         data[i,:] = process_set(set)
-    print('--------------------------------------------------------------')
-    # data[:,0:2] -= 8/2
-    # # Flip y-axis so that direction is consistent with plot
     data = np.flip(data,axis=0)
-
-    # remove any outliers --- should maybe move above so it removes unaveraged outlier points
-    # outlier_idx = []
-    # for i in range(data.shape[0]):
-    #     if np.abs(data[i,2]) > 40:
-    #         print("removing outlier")
-    #         outlier_idx.append(i)
-    # data = np.delete(data,outlier_idx,axis=0)
     return data
 
-def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"black"), fig=None, ax=None):
+def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"black"), line=None, fig=None, ax=None):
      # Plot X,Y,Z
     if fig is None:
         fig = plt.figure()
     if ax is None:
         ax = fig.add_subplot(111, projection='3d')
-    
+    if line != None:
+        ax.plot3D(line[0], line[1], line[2], "black",linewidth="5", alpha=1)
     for i, data in enumerate(data_sets):
         X = data[:,0]
         Y = data[:,1]
         Z = data[:,2]
-        ax.plot_trisurf(X, Y, Z, color=colors[i], edgecolors=edgecolors[1], alpha=0.5)
+        ax.plot_trisurf(X, Y, Z, color=colors[i], edgecolors=edgecolors[0], alpha=0.3)
     plt.show()
+
+def generate_circle_array(radius, offset, height):
+    angles = np.linspace(0, 2*np.pi, 200)
+    x = radius * np.cos(angles) + offset[0]
+    y = radius * np.sin(angles) + offset[1]
+    z = height * np.ones(x.shape)
+    return x, y, z
+
 
 def make_heatmaps(data1, data2, data3):
     Z1 = data1[:,2]
@@ -114,28 +110,60 @@ def plot_line_series(data):
     plt.plot(data[:,0],data[:,2])
     plt.show()
         
+def diagonal_slice(data, plot=False):
+    y_start = -100
+    x_start = -100
+    n, r, c = data.shape
+    data_slice = []
+    for i in range(data.shape[0]):
+        if (data[i,0,1] > y_start) and (data[i,0,0] > x_start):
+            data_slice.append(data[i])
+            y_start = data[i,0,1]
+            x_start = data[i,0,0]
+    data_slice = np.array(data_slice)
+    if plot:
+        plt.plot(np.sqrt(data_slice[:,:,0]**2+data_slice[:,:,1]**2), data_slice[:,:,2],'.')
+        plt.hlines(0, 0, 10)
+        plt.vlines(0, 0, np.max(data_slice[:,:,2]))
+        plt.show()
+    return data_slice
+
+
+def find_sensing_boundary(data_avg, threshold_percent):
+    data_avg = np.mean(data_slice, axis=1)
+    above_thresh_idx = data_avg[:,2] > threshold_percent*np.max(data_avg[:,2])
+    data_above_thresh = data_avg[above_thresh_idx]
+    radius = (np.sqrt(data_above_thresh[0,0]**2+data_above_thresh[0,1]**2) + np.sqrt(data_above_thresh[-1,0]**2+data_above_thresh[-1,1]**2)) / 2
+    height = np.min(data_above_thresh[:,2])
+    center_idx = np.argmax(data_above_thresh[:,2])
+    center = data_above_thresh[center_idx,0:2]
+    return radius, height, center
+
 
 if __name__ == "__main__":
-    data_10 = np.load("test_data_multi-sample/DS10_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
+    data_10 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
     data_10_prep = preprocess(data_10)
-    print(data_10_prep[:,2])
-    # print(data_10[12])
-    # print(data_10_prep)
-    # plot_line_series(data_10_prep)
-    data_20 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
-    data_20_prep = preprocess(data_20)
+    data_slice = diagonal_slice(data_10, plot=True)
+    # print(data_slice)
+    # data_slice_prep = preprocess(data_slice)
+    # # print(data_slice_prep)
+    radius_of_sensing, height_of_radius, center = find_sensing_boundary(data_slice,0.05)
+    print(radius_of_sensing)
+    # data_20 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
+    # data_20_prep = preprocess(data_20)
 
-    data_30 = np.load("test_data_multi-sample/DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
-    data_30_prep = preprocess(data_30)
+    # data_30 = np.load("test_data_multi-sample/DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
+    # data_30_prep = preprocess(data_30)
    
 
-    # ---------------------------
-    make_heatmaps(data_10_prep, data_20_prep, data_30_prep)
-    make_mesh(data_10_prep, data_30_prep)
-    # plt.xlabel("X")
-    X = data_10_prep[:,0]
-    Y = data_10_prep[:,1]
-    make_std_plot([data_10, data_20, data_30], X,Y, num=1)
+    # # ---------------------------
+    make_heatmaps(data_10_prep, data_10_prep, data_10_prep)
+    circle_points = generate_circle_array(radius_of_sensing, center, height_of_radius)
+    make_mesh(data_10_prep,line=circle_points)
+    # # # plt.xlabel("X")
+    # X = data_10_prep[:,0]
+    # Y = data_10_prep[:,1]
+    # make_std_plot([data_10, data_20, data_30], X,Y, num=1)
 
     
     plt.show()
