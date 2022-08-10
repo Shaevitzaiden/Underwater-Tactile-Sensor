@@ -286,7 +286,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS10_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     # x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs, samples=5)
+    test_bench.run_test_sequence(locs, samples=10)
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()

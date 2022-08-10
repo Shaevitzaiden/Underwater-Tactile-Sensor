@@ -141,7 +141,7 @@ def find_sensing_boundary(data_avg, threshold_percent):
 
 
 if __name__ == "__main__":
-    data_10 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
+    data_10 = np.load("test_data_multi-sample/DS10_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
     data_10_prep = preprocess(data_10)
     data_slice = diagonal_slice(data_10, plot=True)
     # print(data_slice)
