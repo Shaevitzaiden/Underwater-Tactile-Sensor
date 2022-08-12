@@ -17,4 +17,5 @@ def get_grid_points(dims, deltas, border_offset):
 
 
 if __name__ == "__main__":
-    print(get_grid_points((15,15),(0.5,0.5),0.5))
+    # print(get_grid_points((15,15),(0.5,0.5),0.5))
+    print(np.random.choice([1]))

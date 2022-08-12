@@ -51,15 +51,15 @@ def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"b
         ax.plot_trisurf(X, Y, Z, color=colors[i], edgecolors=edgecolors[0], alpha=0.3)
     plt.show()
 
-def generate_circle_array(radius, offset, height):
+def generate_circle_array(radius, center, height):
     angles = np.linspace(0, 2*np.pi, 200)
-    x = radius * np.cos(angles) + offset[0]
-    y = radius * np.sin(angles) + offset[1]
+    x = radius * np.cos(angles) + center[0]
+    y = radius * np.sin(angles) + center[1]
     z = height * np.ones(x.shape)
     return x, y, z
 
 
-def make_heatmaps(data1, data2, data3, c1):
+def make_heatmaps(data1, data2, data3, c1=None, c2=None, c3=None):
     Z1 = data1[:,2]
     Z2 = data2[:,2]
     Z3 = data3[:,2]
@@ -76,15 +76,22 @@ def make_heatmaps(data1, data2, data3, c1):
     # ax1.get_shared_y_axes().join(ax2,ax3)
 
     g1 = sns.heatmap(Z1,cmap="YlGnBu",cbar=False,ax=ax1,square=True, vmin=min_val, vmax=max_val)
-    ax1.plot(c1[0]+dims[0]/2, c1[1]+dims[1]/2)
-    ax1.plot(dims[0]/2, dims[1]/2,'*k')
+    if c1 != None:
+        ax1.plot(c1[0]+dims[0]/2, c1[1]+dims[1]/2)
+        ax1.plot(dims[0]/2, dims[1]/2,'*k')
     g1.set_ylabel('')
     g1.set_xlabel('')
     g2 = sns.heatmap(Z2,cmap="YlGnBu",cbar=False,ax=ax2,square=True, vmin=min_val, vmax=max_val)
+    if c2 != None:
+        ax2.plot(c2[0]+dims[0]/2, c2[1]+dims[1]/2)
+        ax2.plot(dims[0]/2, dims[1]/2,'*k')
     g2.set_ylabel('')
     g2.set_xlabel('')
     g2.set_yticks([])
     g3 = sns.heatmap(Z3,cmap="YlGnBu",ax=ax3,square=True,cbar_ax=cax,vmin=min_val, vmax=max_val)
+    if c3 != None:
+        ax3.plot(c3[0]+dims[0]/2, c3[1]+dims[1]/2)
+        ax3.plot(dims[0]/2, dims[1]/2,'*k')
     g3.set_ylabel('')
     g3.set_xlabel('')
     g3.set_yticks([])
@@ -144,12 +151,14 @@ def find_sensing_boundary(data_avg, threshold_percent, manual_max_trim=None):
 
 
 if __name__ == "__main__":
-    data_10 = np.load("test_data_multi-sample/DS10_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
+    center = (-0.05, -0.03)
+
+    data_10 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
     data_10_prep = preprocess(data_10)
    
     # print(radius_of_sensing)
-    # data_20 = np.load("test_data_multi-sample/DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
-    # data_20_prep = preprocess(data_20)
+    data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
+    data_20_prep = preprocess(data_20)
 
     # data_30 = np.load("test_data_multi-sample/DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
     # data_30_prep = preprocess(data_30)
@@ -158,13 +167,16 @@ if __name__ == "__main__":
     # # --------------------------- 
     data_slice_10 = diagonal_slice(data_10_prep, plot=True)
     radius_of_sensing_10, height_of_radius_10 = find_sensing_boundary(data_slice_10, 0.05, manual_max_trim=4)
-    print(radius_of_sensing_10)
+    circle_points_10 = generate_circle_array(radius_of_sensing_10, center, height_of_radius_10)
+    print("radius of sensing: ", radius_of_sensing_10)
 
-    center = (-0.05, -0.03)
-    circle_points = generate_circle_array(radius_of_sensing_10, center, height_of_radius_10)
+    data_slice_20 = diagonal_slice(data_20_prep, plot=True)
+    radius_of_sensing_20, height_of_radius_20 = find_sensing_boundary(data_slice_10, 0.05)#, manual_max_trim=4)
+    circle_points_20 = generate_circle_array(radius_of_sensing_20, center, height_of_radius_20)
+    print("radius of sensing: ",radius_of_sensing_20)
 
-    make_heatmaps(data_10_prep, data_10_prep, data_10_prep, circle_points)
-    make_mesh(data_10_prep,line=circle_points)
+    make_heatmaps(data_10_prep, data_20_prep, data_10_prep, c1=circle_points_10, c2=circle_points_20)
+    make_mesh(data_10_prep, data_20_prep,line=circle_points_10)
     # # # plt.xlabel("X")
     # X = data_10_prep[:,0]
     # Y = data_10_prep[:,1]
