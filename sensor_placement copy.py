@@ -56,8 +56,9 @@ class GridSpace():
         # get NC, SA, and CC areas for use as heuristics
         nc = (self.grid_vals == 0).sum()
         sa = (self.grid_vals == 1).sum()
-        cc = (self.grid_vals >= 2).sum()
-        return nc, sa, cc
+        pc = (self.grid_vals == 2).sum()
+        fc = (self.grid_vals >= 3).sum()
+        return nc, sa, pc, fc
 
     def update_grid_vals(self, circles):
         self.grid_vals *= 0
@@ -75,7 +76,8 @@ class GridSpace():
         self.update_grid_vals(circles)
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.imshow(self.grid_vals,cmap="gnuplot2_r")
+        cm = ax.imshow(self.grid_vals)#,cmap="gnuplot2_r")
+        fig.colorbar(cm, ax=ax)
         for circle in circles:
             x, y = self.generate_circle_array(circle.radius, circle.center)
             ax.plot(x,y,'black')
@@ -125,10 +127,9 @@ class SimulatedAnnealing:
         self.best_sol = circles
         self.best_distances = []
         
-    
     def cost(self, sol):
         c = self.grid.get_coverage(sol)
-        return (25*c[0]+c[1])/(self.grid_area)*500 + 100/(c[1]+c[2])
+        return self.grid.grid_vals.size*(50*c[0] + 0.5*c[1]) - 3*c[3] - 2*c[2]
 
     def optimize(self, start_temp, min_temp, temp_step):
         num_circles = len(self.best_sol)
@@ -136,7 +137,7 @@ class SimulatedAnnealing:
         current_sol = [c.copy() for c in self.best_sol]
         while current_temp > min_temp:
             candidate = [c.copy() for c in current_sol]
-            for i in range(num_circles-1):
+            for i in range(num_circles):
                 # generate new candidate
                 candidate[i].permutate(self.grid.grid_vals.shape)
                 # update current solution (may just stay the same)
@@ -167,17 +168,20 @@ class SimulatedAnnealing:
  
 
 if __name__ == "__main__":
-    grid_size = (25,75)
-    grid = GridSpace(grid_size, 0.25)
-    circles = [Circle(9.5, np.random.randint(0,24,2)) for i in range(8)]
+    sensor_size = (25,50) # 25 wide X 75 tall ......... results in 75 rows and 25 columns
+    grid = GridSpace(sensor_size, 1)
+    centers = [(np.random.randint(0,sensor_size[1]), np.random.randint(0,sensor_size[0])) for i in range(8)]
+    print(centers)
+    circles = [Circle(9.5, centers[i]) for i in range(8)]
     # grid.update_grid_vals(circles)
     # grid.plot_circles_grid(circles)
     # t = TabuList()
     # centers_tuple = tuple(np.array([c.center for c in circles]).reshape((len(circles)*2,)))
     
     sa = SimulatedAnnealing(grid, circles)
-    sol = sa.optimize(200, 0.5, 0.1)
-    print(sol)
+    sol = sa.optimize(50, 0.01, 0.001)
+    for i in range(8):
+        print(sol[i].center)
     grid.plot_circles_grid(sol)
 
     # for i in range(100):
