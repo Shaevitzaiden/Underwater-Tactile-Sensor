@@ -12,7 +12,7 @@ from myVizTools import LiveHeatmap
 
 
 class SensorTestBench():
-    def __init__(self):
+    def __init__(self, silicone_from_pcb):
         self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
@@ -23,15 +23,13 @@ class SensorTestBench():
         self.position = np.array([0,0])
         self.home_offsets = (0, 0)
         self.z = "lowered"
-        self.sensor_calibration = np.zeros((2,))
+        self.sensor_calibration = np.zeros((8,))
         self.stored_data = None
         self.ambient = None
-        # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
-        # self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
+
         self.pcb_from_reference = np.array((3, 3))
-        self.sensor_center_from_pcb = np.array((12.65, 6.23))
-        self.sensor_size = np.array((16,16))
-        self.sensor_zero_offset = self.pcb_from_reference + self.sensor_center_from_pcb
+        self.silicone_from_pcb = silicone_from_pcb
+        self.sensor_zero_offset = self.pcb_from_reference + silicone_from_pcb
 
 
         self.reset_offset = np.array([0,0])
@@ -52,8 +50,8 @@ class SensorTestBench():
                     sample_locs_copy.remove(loc)
             sample_locs = sample_locs_copy
         
-        # x, y, p_sens, p_amb, temp 
-        self.stored_data = np.zeros((len(sample_locs), samples, 2+1+1+1+1))
+        # x, y, p_sens[8], p_amb[8], temp 
+        self.stored_data = np.zeros((len(sample_locs), samples, 2+8+8+8))
         
         # Raise carriage at start
         self.moveZ("raise")
@@ -77,9 +75,8 @@ class SensorTestBench():
             # time.sleep(0.1)
             for j in range(samples):
                 received, sens_data_amb = self.getSensorData()
-                self.stored_data[i,j,3] = sens_data_amb[1]
-                self.stored_data[i,j,4] = sens_data_amb[0]
-            print("AMBIENT PRESSURE ~=", sens_data_amb[0])
+                self.stored_data[i,j,10:18] = sens_data_amb
+            print("AMBIENT PRESSURE ~=", sens_data_amb)
             
             # Lower carriage for measurement
             self.moveZ("lower")
@@ -88,19 +85,11 @@ class SensorTestBench():
             for k in range(samples):
                 received, sens_data_p = self.getSensorData()
                 received, sens_data_t = self.getSensorData(get_temp=True)
-                self.stored_data[i,k,2] = sens_data_p[1]
-                self.stored_data[i,k,5] = sens_data_t[0]
+                self.stored_data[i,k,2:10] = sens_data_p
+                self.stored_data[i,k,18:] = sens_data_t
             print(sens_data_p)
-            print("TEMPERATURE ~=", sens_data_t[0])
-                # print(self.stored_data[i])
-        
-                # self.appendToCSV(self.stored_data[i])
-            # for p in range(points_per_loc):
-            #     _, sens_data = self.getSensorData()
-            #     print(sens_data)
-            #     self.stored_data[i,2:10] = sens_data
-            #     print(self.stored_data[i])
-            # self.moveZ("raise")
+            print("TEMPERATURE ~=", sens_data_t)
+
         
         # Move back to home position and lower
         self.moveToPos((0,0))
@@ -256,10 +245,10 @@ class SensorTestBench():
                 return False, None
             processedData = np.zeros(rawData.shape)
             if get_temp:
-                processedData[0:2] = rawData[0:2]/100 # Degrees Celsius
+                processedData[0:8] = rawData[0:8]/100 # Degrees Celsius
             else:
                 # Conversion from mbar to psi and apply calibration
-                processedData[0:2] = rawData[0:2]/10*0.0145    # PSI
+                processedData[0:8] = rawData[0:8]/10*0.0145    # PSI
             return True, processedData
         print("Sensor did not receive request for data")
         return False, None 
@@ -299,7 +288,7 @@ class SensorTestBench():
         target_points = []
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
-                target_points.append((round(x_range[j]+x_offset-(x_dim/2),1), round(y_range[i]+y_offset-(y_dim/2),1)))
+                target_points.append((round(x_range[j]+x_offset,1), round(y_range[i]+y_offset,1)))
         return target_points
 
     def get_line_points(self, length, delta):
@@ -316,35 +305,18 @@ class SensorTestBench():
 
 
 if __name__ == "__main__":
+    sfp_ds10_ideal = np.array((0,0))
+    sfp_ds10_large = np.array((0,0))
+    sfp_ds20_ideal = np.array((0,0))
+    sfp_ds20_large = np.array((0,0))
+
     test_bench = SensorTestBench()
-    # print(test_bench.getSensorData())
-    
-    # test_bench.moveZ("lower")
-
-    # test_bench.sendSerialMSG([6,9,9])
-    # test_bench.moveToPos(test_bench.sensor_zero_offset)
-    # time.sleep(10)
-    
-    # test_bench.moveToPos(-test_bench.sensor_zero_offset)
-    # test_bench.moveZ("lower")
-    # time.sleep(4)
-    # test_bench.moveToPos((0,0))
-    # test_bench.moveZ("lower")
-
-
-    # test_bench.moveToPos(test_bench.sensor_zero_offset)
-    
-    # --------------------------------------------------------
     locs = test_bench.get_grid_points((16,16), (0.5,0.5), (0.5,0.5))
-    # locs = test_bench.get_line_points(8,0.5)
-    # print(locs)
-    # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
-
-    # print(locs)
-    # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
-    # test_bench.run_test_sequence(locs) 
-    # x_off, y_off = test_bench.sensor_zero_offset
     test_bench.run_test_sequence(locs, samples=10)
+   
+   
+   # Sensor sample test
+# ----------------------------------------------------------------   
     # for i in range(1000):
     #     print(i)
     #     a, b = test_bench.getSensorData()
@@ -354,16 +326,7 @@ if __name__ == "__main__":
     # test_bench.run_test_sequence(locs, restart_loc=(4.0+x_off,0+y_off))
     # --------------------------------------------------------
     
-    
-    # test_bench.moveToPos(test_bench.sensor_zero_offset)
-    # test_bench.moveZ("lower")
-    # time.sleep(5)
-    # test_bench.moveToPos((0,0))
-    # # test_bench.getSensorCalibration()
-    # # test_bench.moveZ("raise")
-    # # test_bench.moveOffLimitSwitches()
-    # test_bench.moveZ("lower")
-    
+# HEATMAP BELOW
 #------------------------------------------------------
 #     cal = test_bench.getSensorCalibration()
 #     heatmap = LiveHeatmap()
