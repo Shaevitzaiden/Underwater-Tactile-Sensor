@@ -21,7 +21,7 @@
 
 uint8_t current_channel = 0;
 uint8_t terminate = 0;
-uint16_t c[8][6];
+uint16_t c[6];
 unsigned long t;
 
 bool switch_x_1 = false;
@@ -82,14 +82,11 @@ void setup()
   byte c_addr[6] = {0xA2, 0xA4, 0xA6, 0xA8, 0xAA, 0xAC}; // C1-C6 calibration value addresses
 
   //  Loop for population 2d array of calibration values
-  for (int i = 0; i < 8; i++) {
-    channel_select(i);
-    reset_sensor();
-    delay(1);
-    for (int j = 0; j < 6; j++) {
-      c[i][j] = read_data16(c_addr[j]); // store calibration value
-    }
+
+  for (int j = 0; j < 6; j++) {
+    c[j] = read_data16(c_addr[j]); // store calibration value
   }
+ 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   Serial.println("12");
 }
@@ -471,45 +468,26 @@ void limit_switch_y2() {
 
 
 void writeSensorData(bool get_temp) {
-  int32_t S[2] = {0, 0};
-  getSensorData(S, get_temp);
-  for (int i = 0; i < 2; i++) {
-    Serial.print(S[i]); Serial.print(",");
-  }
+  int32_t S = getSensorData(get_temp);
+  Serial.print(S); Serial.print(",");
   Serial.print(">");
 }
 
 
-void getSensorData(int32_t *s_array, bool get_temp) {
-  int i = 3;
-  uint32_t pressure = digital_pressure_val(i);
-  uint32_t temperature = digital_temperature_val(i);
+int32_t getSensorData(bool get_temp) {
+  uint32_t pressure = digital_pressure_val();
+  uint32_t temperature = digital_temperature_val();
 
-  int32_t dT = temperature - (c[i][4] * pow(2, 8));
-  int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
+  int32_t dT = temperature - (c[4] * pow(2, 8));
+  int32_t TEMP = 2000.0 + (dT * c[5] / pow(2, 23));
 
-  int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
-  int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
+  int64_t OFF = c[1] * pow(2, 16) + (c[3] * dT) / pow(2, 7);
+  int64_t SENS = c[0] * pow(2, 15) + (c[2] * dT) / pow(2, 8);
   if (get_temp) {
-    s_array[0] = TEMP;
+    return TEMP;
   }
   else {
-    s_array[0] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
-  }
-  i = 7;
-  pressure = digital_pressure_val(i);
-  temperature = digital_temperature_val(i);
-
-  dT = temperature - (c[i][4] * pow(2, 8));
-  TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
-
-  OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
-  SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
-  if (get_temp) {
-    s_array[1] = TEMP;
-  }
-  else {
-    s_array[1] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
+    return (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
   }
 }
 
@@ -576,11 +554,11 @@ uint16_t read_data16(byte command) {
   return big_sad;
 }
 
-uint32_t digital_pressure_val(uint8_t channel) {
+uint32_t digital_pressure_val() {
   // if measurement is not on active channel then switch
-  if (channel != current_channel) {
-    channel_select(channel);
-  }
+//  if (channel != current_channel) {
+//    channel_select(channel);
+//  }
   // start pressure data conversion
   start_conv(posr2048);
   // get data
@@ -588,11 +566,11 @@ uint32_t digital_pressure_val(uint8_t channel) {
   return data;
 }
 
-uint32_t digital_temperature_val(uint8_t channel) {
+uint32_t digital_temperature_val() {
   // if measurement is not on active channel then switch
-  if (channel != current_channel) {
-    channel_select(channel);
-  }
+//  if (channel != current_channel) {
+//    channel_select(channel);
+//  }
   // start pressure data conversion
   start_conv(tosr2048);
   // get data
