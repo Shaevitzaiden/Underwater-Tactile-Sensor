@@ -23,14 +23,14 @@ class SensorTestBench():
         self.position = np.array([0,0])
         self.home_offsets = (0, 0)
         self.z = "lowered"
-        self.sensor_calibration = np.zeros((2,))
+        self.sensor_calibration = np.zeros((1,))
         self.stored_data = None
         self.ambient = None
         # self.sensor_zero_offset = np.array([25, 3+4]) # mm in x and y
         # self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
         self.pcb_from_reference = np.array((3, 3))
-        self.sensor_center_from_pcb = np.array((12.65, 6.23))
-        self.sensor_size = np.array((16,16))
+        self.sensor_center_from_pcb = np.array((12.56+3.3/2, 12.55+3.3/2))
+        self.sensor_size = np.array((20,20))
         self.sensor_zero_offset = self.pcb_from_reference + self.sensor_center_from_pcb
 
 
@@ -256,10 +256,10 @@ class SensorTestBench():
                 return False, None
             processedData = np.zeros(rawData.shape)
             if get_temp:
-                processedData[0:2] = rawData[0:2]/100 # Degrees Celsius
+                processedData[0:1] = rawData[0:1]/100 # Degrees Celsius
             else:
                 # Conversion from mbar to psi and apply calibration
-                processedData[0:2] = rawData[0:2]/10*0.0145    # PSI
+                processedData[0:1] = rawData[0:1]/10*0.0145    # PSI
             return True, processedData
         print("Sensor did not receive request for data")
         return False, None 
