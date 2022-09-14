@@ -471,45 +471,31 @@ void limit_switch_y2() {
 
 
 void writeSensorData(bool get_temp) {
-  int32_t S[2] = {0, 0};
+  int32_t S[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   getSensorData(S, get_temp);
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 8; i++) {
     Serial.print(S[i]); Serial.print(",");
   }
   Serial.print(">");
 }
 
-
 void getSensorData(int32_t *s_array, bool get_temp) {
-  int i = 3;
-  uint32_t pressure = digital_pressure_val(i);
-  uint32_t temperature = digital_temperature_val(i);
+  long sensor_time = 0;
+  for (int i = 0; i < 8; i++) {
+    uint32_t pressure = digital_pressure_val(i);
+    uint32_t temperature = digital_temperature_val(i);
 
-  int32_t dT = temperature - (c[i][4] * pow(2, 8));
-  int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
+    int32_t dT = temperature - (c[i][4] * pow(2, 8));
+    int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
 
-  int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
-  int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
-  if (get_temp) {
-    s_array[0] = TEMP;
-  }
-  else {
-    s_array[0] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
-  }
-  i = 7;
-  pressure = digital_pressure_val(i);
-  temperature = digital_temperature_val(i);
-
-  dT = temperature - (c[i][4] * pow(2, 8));
-  TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
-
-  OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
-  SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
-  if (get_temp) {
-    s_array[1] = TEMP;
-  }
-  else {
-    s_array[1] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
+    int64_t OFF = c[i][1] * pow(2, 16) + (c[i][3] * dT) / pow(2, 7);
+    int64_t SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
+    if (get_temp) {
+      s_array[i] = TEMP;
+    }
+    else {
+      s_array[i] = (pressure * SENS / pow(2, 21) - OFF) / pow(2, 13);
+    }
   }
 }
 
