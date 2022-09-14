@@ -53,7 +53,7 @@ class SensorTestBench():
             sample_locs = sample_locs_copy
         
         # x, y, p_sens, p_amb, temp 
-        self.stored_data = np.zeros((len(sample_locs), samples, 2+1+1+1+1))
+        self.stored_data = np.zeros((len(sample_locs), samples, 2+1+1+1))
         
         # Raise carriage at start
         self.moveZ("raise")
@@ -77,8 +77,7 @@ class SensorTestBench():
             # time.sleep(0.1)
             for j in range(samples):
                 received, sens_data_amb = self.getSensorData()
-                self.stored_data[i,j,3] = sens_data_amb[1]
-                self.stored_data[i,j,4] = sens_data_amb[0]
+                self.stored_data[i,j,3] = sens_data_amb[0]
             print("AMBIENT PRESSURE ~=", sens_data_amb[0])
             
             # Lower carriage for measurement
@@ -88,8 +87,8 @@ class SensorTestBench():
             for k in range(samples):
                 received, sens_data_p = self.getSensorData()
                 received, sens_data_t = self.getSensorData(get_temp=True)
-                self.stored_data[i,k,2] = sens_data_p[1]
-                self.stored_data[i,k,5] = sens_data_t[0]
+                self.stored_data[i,k,2] = sens_data_p[0]
+                self.stored_data[i,k,4] = sens_data_t[0]
             print(sens_data_p)
             print("TEMPERATURE ~=", sens_data_t[0])
                 # print(self.stored_data[i])
