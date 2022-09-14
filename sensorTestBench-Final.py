@@ -305,14 +305,14 @@ class SensorTestBench():
 
 
 if __name__ == "__main__":
-    sfp_ds10_ideal = np.array((0,0))
-    sfp_ds10_large = np.array((0,0))
-    sfp_ds20_ideal = np.array((0,0))
-    sfp_ds20_large = np.array((0,0))
+    sfp_ds10_ideal = np.array((0.75, 0.75))
+    sfp_ds10_large = np.array((0.75, 0.75))
+    sfp_ds20_ideal = np.array((0.75, 0.75))
+    sfp_ds20_large = np.array((0.75, 0.75))
 
-    test_bench = SensorTestBench()
-    locs = test_bench.get_grid_points((16,16), (0.5,0.5), (0.5,0.5))
-    test_bench.run_test_sequence(locs, samples=10)
+    test_bench = SensorTestBench(sfp_ds10_ideal)
+    locs = test_bench.get_grid_points((3,3), (0.5,0.5), (0, 0))
+    # test_bench.run_test_sequence(locs, samples=10)
    
    
    # Sensor sample test
