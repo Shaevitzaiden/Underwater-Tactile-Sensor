@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
@@ -343,13 +343,14 @@ if __name__ == "__main__":
     # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
     # test_bench.run_test_sequence(locs) 
     # x_off, y_off = test_bench.sensor_zero_offset
-    test_bench.run_test_sequence(locs, samples=10)
-    # for i in range(1000):
-    #     print(i)
-    #     a, b = test_bench.getSensorData()
-    #     if (np.abs(b) > 20000).any():
-    #         print("error")
-            # break
+   # test_bench.run_test_sequence(locs, samples=10)
+    for i in range(1000):
+        print(i)
+        a, b = test_bench.getSensorData()
+        print(b)
+        if (np.abs(b) > 20000).any():
+            print("error")
+            break
     # test_bench.run_test_sequence(locs, restart_loc=(4.0+x_off,0+y_off))
     # --------------------------------------------------------
     
