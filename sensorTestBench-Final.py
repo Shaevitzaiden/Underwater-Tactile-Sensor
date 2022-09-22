@@ -12,7 +12,7 @@ from myVizTools import LiveHeatmap
 
 
 class SensorTestBench():
-    def __init__(self, silicone_from_pcb):
+    def __init__(self):
         self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
@@ -28,8 +28,8 @@ class SensorTestBench():
         self.ambient = None
 
         self.pcb_from_reference = np.array((3, 3))
-        self.silicone_from_pcb = silicone_from_pcb
-        self.sensor_zero_offset = self.pcb_from_reference + silicone_from_pcb
+        self.silicone_from_pcb = np.array((0.75, 0.75))
+        self.sensor_zero_offset = self.pcb_from_reference + self.silicone_from_pcb
 
 
         self.reset_offset = np.array([0,0])
@@ -275,7 +275,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS10_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy"):
+    def saveArray(self, title="test_data_multi-sample\\multi-test.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -305,25 +305,25 @@ class SensorTestBench():
 
 
 if __name__ == "__main__":
-    sfp_ds10_ideal = np.array((0.75, 0.75))
-    sfp_ds10_large = np.array((0.75, 0.75))
-    sfp_ds20_ideal = np.array((0.75, 0.75))
-    sfp_ds20_large = np.array((0.75, 0.75))
+    sfp_ds10_ideal = (28.5, 31.25)
+    sfp_ds10_large = (28.5, 36.25)
+    sfp_ds20_ideal = (28.5, 41.75)
+    sfp_ds20_large = (28.6, 48.18)
 
-    test_bench = SensorTestBench(sfp_ds10_ideal)
-    locs = test_bench.get_grid_points((3,3), (0.5,0.5), (0, 0))
-    # test_bench.run_test_sequence(locs, samples=10)
+    test_bench = SensorTestBench()
+    locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0, 0))
+    test_bench.run_test_sequence(locs, samples=5)
    
    
    # Sensor sample test
 # ----------------------------------------------------------------   
-    for i in range(1000):
-        print(i)
-        a, b = test_bench.getSensorData()
-        print(b)
-        if (np.abs(b) > 20000).any():
-            print("error")
-            break
+    # for i in range(1000):
+    #     print(i)
+    #     a, b = test_bench.getSensorData()
+    #     print(b)
+    #     if (np.abs(b) > 20000).any():
+    #         print("error")
+    #         break
     # test_bench.run_test_sequence(locs, restart_loc=(4.0+x_off,0+y_off))
     # --------------------------------------------------------
     
