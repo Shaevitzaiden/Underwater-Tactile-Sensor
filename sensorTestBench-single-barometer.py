@@ -30,7 +30,7 @@ class SensorTestBench():
         # self.sensor_zero_offset = np.array([9.42, 3]) # mm in x and y
         self.pcb_from_reference = np.array((3, 3))
         self.sensor_center_from_pcb = np.array((12.56+3.3/2, 12.55+3.3/2))
-        self.sensor_size = np.array((20,20))
+        self.sensor_size = np.array((24,24))
         self.sensor_zero_offset = self.pcb_from_reference + self.sensor_center_from_pcb
 
 
@@ -285,7 +285,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS10_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy"):
+    def saveArray(self, title="test_data_multi-sample\\single_sensor_test.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -334,23 +334,17 @@ if __name__ == "__main__":
     # test_bench.moveToPos(test_bench.sensor_zero_offset)
     
     # --------------------------------------------------------
-    locs = test_bench.get_grid_points((16,16), (0.5,0.5), (0.5,0.5))
-    # locs = test_bench.get_line_points(8,0.5)
-    # print(locs)
-    # locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0.5,0.5))
-
-    # print(locs)
-    # locs = test_bench.get_grid_points((3,3), (0.5,0.5))
-    # test_bench.run_test_sequence(locs) 
-    # x_off, y_off = test_bench.sensor_zero_offset
-   # test_bench.run_test_sequence(locs, samples=10)
-    for i in range(1000):
-        print(i)
-        a, b = test_bench.getSensorData()
-        print(b)
-        if (np.abs(b) > 20000).any():
-            print("error")
-            break
+    locs = test_bench.get_grid_points((24,24), (0.5,0.5), (0.5,0.5))
+    test_bench.run_test_sequence(locs, samples=5)
+    
+    # for i in range(1000):
+    #     print(i)
+    #     a, b = test_bench.getSensorData()
+    #     print(b)
+    #     if (np.abs(b) > 20000).any():
+    #         print("error")
+    #         break
+    
     # test_bench.run_test_sequence(locs, restart_loc=(4.0+x_off,0+y_off))
     # --------------------------------------------------------
     
