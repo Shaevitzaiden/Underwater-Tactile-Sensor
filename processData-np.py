@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
     # # --------------------------- 
     data_slice_10 = diagonal_slice(data_10_prep, plot=True)
-    radius_of_sensing_10, height_of_radius_10 = find_sensing_boundary(data_slice_10, 0.05)
+    radius_of_sensing_10, height_of_radius_10 = find_sensing_boundary(data_slice_10, 0.02)
     circle_points_10 = generate_circle_array(radius_of_sensing_10, center, height_of_radius_10)
     print("radius of sensing: ", radius_of_sensing_10)
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     print("radius of sensing: ",radius_of_sensing_20)
 
     # make_heatmaps(data_10_prep, data_20_prep, data_10_prep, c1=circle_points_10, c2=circle_points_20)
-    # make_mesh(data_10_prep, data_20_prep,line=circle_points_10)
+    make_mesh(data_10_prep, line=circle_points_10)
     
     
     # # # plt.xlabel("X")
