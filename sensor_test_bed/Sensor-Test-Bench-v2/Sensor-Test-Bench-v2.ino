@@ -46,7 +46,7 @@ AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper
 void setup()
 {
   Wire.begin();
-  //  Wire.setWireTimeout(50000);
+  Wire.setWireTimeout(100000);
   Serial.begin(230400);
   //  Serial.begin(115200);
   clearInputBuffer();
@@ -475,9 +475,16 @@ void writeSensorData(bool get_temp) {
 
 
 int32_t getSensorData(bool get_temp) {
-  uint32_t pressure = digital_pressure_val();
-  uint32_t temperature = digital_temperature_val();
-
+  uint32_t pressure = 0;
+  while (pressure == 0){
+  pressure = digital_pressure_val();  
+  }
+  
+  uint32_t temperature = 0;
+  while (temperature == 0){
+  temperature = digital_temperature_val();
+  }
+  
   int32_t dT = temperature - (c[4] * pow(2, 8));
   int32_t TEMP = 2000.0 + (dT * c[5] / pow(2, 23));
 
