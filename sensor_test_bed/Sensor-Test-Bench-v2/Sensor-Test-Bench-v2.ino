@@ -46,7 +46,7 @@ AccelStepper stepperZ(AccelStepper::DRIVER, 12, 11); // Defaults to AccelStepper
 void setup()
 {
   Wire.begin();
-  //  Wire.setWireTimeout(50000);
+  Wire.setWireTimeout(50000);
   Serial.begin(230400);
   //  Serial.begin(115200);
   clearInputBuffer();
@@ -59,11 +59,11 @@ void setup()
   stepperX.setAcceleration(1000);
   stepperY.setAcceleration(1000);
   stepperZ.setAcceleration(1000);
-  
-//  pinMode(18, INPUT_PULLUP);
-//  pinMode(19, INPUT_PULLUP);
-//  pinMode(3, INPUT_PULLUP);
-//  pinMode(2, INPUT_PULLUP);
+
+  //  pinMode(18, INPUT_PULLUP);
+  //  pinMode(19, INPUT_PULLUP);
+  //  pinMode(3, INPUT_PULLUP);
+  //  pinMode(2, INPUT_PULLUP);
 
   //  attachInterrupt(digitalPinToInterrupt(3), limit_switch_x1, CHANGE);
   //  attachInterrupt(digitalPinToInterrupt(2), limit_switch_x2, CHANGE);
@@ -479,12 +479,52 @@ void writeSensorData(bool get_temp) {
   Serial.print(">");
 }
 
+void reset_wire(){
+  uint32_t combined;
+  while (Wire.available()) {
+    combined = (combined << 8) | (Wire.read());
+  }
+      
+}
+
 void getSensorData(int32_t *s_array, bool get_temp) {
+//  clearInputBuffer();
+  int error_count = 0;
   long sensor_time = 0;
   for (int i = 0; i < 8; i++) {
-    uint32_t pressure = digital_pressure_val(i);
-    uint32_t temperature = digital_temperature_val(i);
-
+//    uint32_t pressure = digital_pressure_val(i);
+    uint32_t pressure = 0;
+    while (pressure == 0) {
+      pressure = digital_pressure_val(i);
+      if (pressure == 0){
+        error_count += 1;
+        Wire.clearWireTimeoutFlag();
+        if (error_count > 2){
+        reset_wire();
+        delay(10);
+        reset_sensor();
+        delay(100);
+        }
+//        Serial.println("bugged pressure");
+      }
+    }
+    error_count = 0;
+//    uint32_t temperature = digital_temperature_val(i);
+    uint32_t temperature = 0;
+    while (temperature == 0) {
+      temperature = digital_temperature_val(i);
+      if (temperature == 0){
+        Wire.clearWireTimeoutFlag();
+        if (error_count > 2){
+        reset_wire();
+        delay(10);
+        reset_sensor();
+        delay(100);
+        }
+//        Serial.println("bugged temp");
+      }
+    }
+    error_count = 0;
     int32_t dT = temperature - (c[i][4] * pow(2, 8));
     int32_t TEMP = 2000.0 + (dT * c[i][5] / pow(2, 23));
 

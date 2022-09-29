@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
@@ -86,6 +86,7 @@ class SensorTestBench():
                 received, sens_data_p = self.getSensorData()
                 received, sens_data_t = self.getSensorData(get_temp=True)
                 self.stored_data[i,k,2:10] = sens_data_p
+                print(sens_data_p)
                 self.stored_data[i,k,18:] = sens_data_t
             print(sens_data_p)
             print("TEMPERATURE ~=", sens_data_t)
@@ -211,7 +212,7 @@ class SensorTestBench():
             print("motion failed to start")
         return is_finished
 
-    def receiveVectorData(self, timeout=1):
+    def receiveVectorData(self, timeout=4):
         t1 = time.time()
         msg = []
         num_str = []
@@ -270,12 +271,12 @@ class SensorTestBench():
             file.write("{0}\n".format(",".join([str(val) for val in data.tolist()])))
         print("Finished appending to CSV")
 
-    def writeToCSV(self, title="test_data\\DS10_100g_atm_0.5mm.csv"):
+    def writeToCSV(self, title="test_data\\DS20_100g_atm_11.95mm.csv"):
         with open (title, 'w') as file:
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\multi-test.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS20_atm_9.9_10_samples.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -283,8 +284,9 @@ class SensorTestBench():
         dx, dy = deltas
         x_dim, y_dim = dims
         x_offset, y_offset = self.sensor_zero_offset
-        x_range = np.arange(start=border_offsets[0], stop=x_dim+dx-border_offsets[1], step=dx)
-        y_range = np.arange(start=border_offsets[0], stop=y_dim+dy-border_offsets[1], step=dy)
+        x_range = np.arange(start=border_offsets[0], stop=x_dim+dx-border_offsets[0], step=dx)
+        print(x_range)
+        y_range = np.arange(start=border_offsets[1], stop=y_dim+dy-border_offsets[1], step=dy)
         target_points = []
         for i in range(y_range.shape[0]):
             for j in range(x_range.shape[0]):
@@ -311,8 +313,9 @@ if __name__ == "__main__":
     sfp_ds20_large = (28.6, 48.18)
 
     test_bench = SensorTestBench()
-    locs = test_bench.get_grid_points((2,2), (0.5,0.5), (0, 0))
-    test_bench.run_test_sequence(locs, samples=5)
+    locs = test_bench.get_grid_points(sfp_ds20_ideal, (0.5,0.5), (2, 2))
+    # print(locs)
+    test_bench.run_test_sequence(locs, samples=10)
    
    
    # Sensor sample test
