@@ -17,4 +17,4 @@ def get_grid_points(dims, deltas, border_offset):
 
 
 if __name__ == "__main__":
-    print(np.load("test_data_multi-sample/multi-test.npy")[0][0])
+    print(np.load("test_data_multi-sample/DS20_atm_9.9_10_samples.npy"))
