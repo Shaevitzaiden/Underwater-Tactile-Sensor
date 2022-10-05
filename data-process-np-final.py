@@ -116,13 +116,13 @@ if __name__ == "__main__":
     center = (-0.05, -0.03)
 
     data_10 = np.load("C:\\Users\\Aiden\\Documents\\Research\\UnderwaterTactileSensor\\Underwater-Tactile-Sensor\\test_data_multi-sample\DS10_atm_8.75_10_samples_trial1.npy")
-    # data_10_prep_mesh = preprocess1(data_10, hard_cutoff=1.5, mesh=True)
-    data_10_prep_train = preprocess1(data_10, hard_cutoff=1.5, mesh=False)
+    data_10_prep_mesh = preprocess1(data_10, hard_cutoff=1.5, mesh=True)
+    # data_10_prep_train = preprocess1(data_10, hard_cutoff=1.5, mesh=False)
 
-    locs = data_10_prep_train[:,0:2]
-    sens = data_10_prep_train[:,2:]
+    # locs = data_10_prep_train[:,0:2]
+    # sens = data_10_prep_train[:,2:]
 
-    np.savetxt("train_data/DS10_atm_8.75_10-samples_train.csv", data_10_prep_train, delimiter=',')
+    # np.savetxt("train_data/DS10_atm_8.75_10-samples_train.csv", data_10_prep_train, delimiter=',')
 
     # print(radius_of_sensing)
     # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
 
     # # --------------------------- 
-    # make_heatmaps(data_10_prep)
+    make_heatmaps(data_10_prep_mesh)
     # make_mesh(data_10_prep)
     
     
