@@ -169,7 +169,7 @@ if __name__ == "__main__":
     # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
     # data_20_prep = preprocess(data_20)
 
-    data_10 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples.npy")
+    data_10 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples_trial3.npy")
     data_10_prep = preprocess(data_10)
 
     data_20 = np.load("test_data_multi-sample\DS20_atm_single_21x21_0.5mm_10-samples.npy")
@@ -191,8 +191,8 @@ if __name__ == "__main__":
     # circle_points_20 = generate_circle_array(radius_of_sensing_20, center, height_of_radius_20)
     # print("radius of sensing: ",radius_of_sensing_20)
 
-    make_heatmaps(data_20_prep, data_20_prep, data_20_prep)
-    make_mesh(data_20_prep)
+    make_heatmaps(data_10_prep, data_10_prep, data_10_prep)
+    make_mesh(data_10_prep)
     
     
     # # # plt.xlabel("X")
