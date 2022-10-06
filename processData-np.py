@@ -187,7 +187,7 @@ if __name__ == "__main__":
     print("radius of sensing: ", radius_of_sensing_10)
 
     data_slice_20 = diagonal_slice(data_20_prep, plot=True)
-    radius_of_sensing_20, height_of_radius_20 = find_sensing_boundary(data_slice_20, 0.05, manual_max_trim=0.4)
+    radius_of_sensing_20, height_of_radius_20 = find_sensing_boundary(data_slice_20, 0.05, manual_max_trim=4)
     circle_points_20 = generate_circle_array(radius_of_sensing_20, center, height_of_radius_20)
     print("radius of sensing: ",radius_of_sensing_20)
 
