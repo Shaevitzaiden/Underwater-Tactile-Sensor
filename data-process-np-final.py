@@ -90,7 +90,7 @@ def make_heatmaps(data1):
     Z1 = Z1.reshape((y_dim, x_dim))
 
     f, ax1 = plt.subplots()
-    pos = ax1.imshow(Z1)
+    pos = ax1.imshow(Z1, cmap='Spectral')
     f.colorbar(pos, ax=ax1)
     ax1.set_xlabel('mm')
     ax1.set_ylabel('mm')
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
     # # --------------------------- 
     make_heatmaps(data_10_prep_mesh)
-    # make_mesh(data_10_prep)
+    make_mesh(data_10_prep_mesh)
     
     
     plt.show()
