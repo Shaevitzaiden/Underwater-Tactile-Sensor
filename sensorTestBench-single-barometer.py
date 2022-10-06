@@ -13,7 +13,7 @@ from myVizTools import LiveHeatmap
 
 class SensorTestBench():
     def __init__(self):
-        self.arduino = serial.Serial(port="COM5", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
+        self.arduino = serial.Serial(port="COM4", baudrate=230400, timeout=0.5) # Don't forget to check port, can maybe automate finding the port
         ready = self.startup()
         if not ready:    
             print("Failed to initiate coms, retry")
