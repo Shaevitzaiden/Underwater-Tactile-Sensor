@@ -58,6 +58,49 @@ def generate_circle_array(radius, center, height):
     z = height * np.ones(x.shape)
     return x, y, z
 
+def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=1):
+    data_cp = data.copy()
+    check_list = []
+    for i in range(data.shape[0]):  # cycle through rows
+        for j in range(data.shape[1]): # cycle through columns
+            if (data[i,j] > thresh_top) or (data[i,j] < thresh_bot):
+                if (i == 0) and (j == 0): # Top left corner
+                    check_list = [(i,j+1), (i+1,j+1), (i+1,j)]
+                elif (i == data.shape[0]-1) and (j == data.shape[1]-1): # Bottom right corner
+                    check_list = [(i,j-1), (i-1,j), (i-1,j-1)]
+                elif (i == 0) and (j == data.shape[1]-1): # Top right corner
+                    check_list = [(i,j-1), (i+1,j), (i+1,j-1)]
+                elif (i == data.shape[0]-1) and (j == 0): # Bottom left corner
+                    check_list = [(i,j+1), (i-1,j), (i-1,j+1)]
+                elif i == 0: # Top
+                    check_list = [(i,j-1), (i,j+1), (i+1,j), (i+1,j-1), (i+1,j+1)]
+                elif j == 0: # Left
+                    check_list = [(i-1,j), (i+1,j), (i,j+1), (i-1,j+1), (i+1,j+1)]
+                elif i == (data.shape[0]-1): # bottom
+                    check_list = [(i,j-1), (i,j+1), (i-1,j), (i-1,j-1), (i-1,j+1)]
+                elif j == (data.shape[1]-1): # right
+                    check_list = [(i-1,j), (i+1,j), (i,j-1), (i-1,j-1), (i+1,j-1)]
+                else: # Anywhere in the middle
+                    check_list = [(i-1,j-1), (i-1,j), (i-1,j+1), (i,j-1), (i,j+1), (i+1,j-1), (i+1,j), (i+1,j+1)]
+
+
+                check_list_vals = np.array([data[idx[0],idx[1]] for idx in check_list])
+                more_than_thresh_bot = check_list_vals > thresh_bot
+                check_list_vals = check_list_vals[more_than_thresh_bot]
+                less_than_thresh_top = check_list_vals < thresh_top
+                check_list_vals = check_list_vals[less_than_thresh_top]
+                
+                data[i,j] = np.mean(check_list_vals)
+            
+            # good_check_list = check_list_vals > 0
+            # check_list_vals = check_list_vals[good_check_list]
+            # if np.abs(data[i,j]) > scale*np.mean(check_list_vals):
+            #     data[i,j] = np.mean(check_list_vals)
+                
+    return data
+            
+
+
 
 def make_heatmaps(data1, data2, data3, c1=None, c2=None, c3=None):
     Z1 = data1[:,2]
@@ -68,9 +111,13 @@ def make_heatmaps(data1, data2, data3, c1=None, c2=None, c3=None):
     max_val = np.max(np.hstack([Z1, Z2, Z3]))
 
     grid_dim = int(np.sqrt(data1.shape[0]))
-    Z1 = Z1.reshape((grid_dim, grid_dim))
-    Z2 = Z2.reshape((grid_dim, grid_dim))
-    Z3 = Z3.reshape((grid_dim, grid_dim))
+    Z1 = filter_and_interp(Z1.reshape((grid_dim, grid_dim)), scale=2)
+    # print(Z1)
+    # for i in range(0):
+    #     Z1 = filter_and_interp(Z1, scale=2)
+    #     print(Z1)
+    Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=2)
+    Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=2)
     dims = Z1.shape
     f,(ax1,ax2,ax3, cax) = plt.subplots(1,4,gridspec_kw={'width_ratios': [4,4,4,1], "height_ratios": [1]}) #, gridspec_kw={'width_ratios':[1,1,1,0.08]})
     # ax1.get_shared_y_axes().join(ax2,ax3)
@@ -169,14 +216,14 @@ if __name__ == "__main__":
     # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
     # data_20_prep = preprocess(data_20)
 
-    data_10 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_10 = np.load("test_data_multi-sample\DS10_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_10_prep = preprocess(data_10)
 
-    data_20 = np.load("test_data_multi-sample\DS20_25PSI_single_21x21_0.5mm_10-samples_trial1.npy")
+    data_20 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_20_prep = preprocess(data_20)
 
-    # data_30 = np.load("test_data_multi-sample/DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
-    # data_30_prep = preprocess(data_30)
+    data_30 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_30_prep = preprocess(data_20)
    
 
 
@@ -191,8 +238,8 @@ if __name__ == "__main__":
     # circle_points_20 = generate_circle_array(radius_of_sensing_20, center, height_of_radius_20)
     # print("radius of sensing: ",radius_of_sensing_20)
 
-    make_heatmaps(data_10_prep, data_10_prep, data_10_prep)
-    make_mesh(data_10_prep)
+    make_heatmaps(data_10_prep, data_20_prep, data_30_prep)
+    make_mesh(data_10_prep, data_20_prep, data_30_prep)
     
     
     # # # plt.xlabel("X")
