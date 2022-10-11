@@ -276,7 +276,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS10_50PSI_6.75_10_samples_trial1.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS20_atm_9.9_10_samples_cast-bond_trial1.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     sfp_ds20_large = (28.6, 48.18)
 
     test_bench = SensorTestBench()
-    locs = test_bench.get_grid_points(sfp_ds10_ideal, (0.5,0.5), (2, 2))
+    locs = test_bench.get_grid_points(sfp_ds20_ideal, (0.5,0.5), (2, 2))
     # print(locs)
     test_bench.run_test_sequence(locs, samples=10)
    
