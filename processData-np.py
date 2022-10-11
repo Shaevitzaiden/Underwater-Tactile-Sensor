@@ -169,7 +169,7 @@ if __name__ == "__main__":
     # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
     # data_20_prep = preprocess(data_20)
 
-    data_10 = np.load("test_data_multi-sample\DS10_atm_single_21x21_0.5mm_10-samples_trial3.npy")
+    data_10 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_10_prep = preprocess(data_10)
 
     data_20 = np.load("test_data_multi-sample\DS20_25PSI_single_21x21_0.5mm_10-samples_trial1.npy")
