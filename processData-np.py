@@ -107,8 +107,7 @@ def make_heatmaps(data1, data2, data3, c1=None, c2=None, c3=None):
     Z2 = data2[:,2]
     Z3 = data3[:,2]
 
-    min_val = np.min(np.hstack([Z1, Z2, Z3]))
-    max_val = np.max(np.hstack([Z1, Z2, Z3]))
+
 
     grid_dim = int(np.sqrt(data1.shape[0]))
     Z1 = filter_and_interp(Z1.reshape((grid_dim, grid_dim)), scale=2)
@@ -118,6 +117,10 @@ def make_heatmaps(data1, data2, data3, c1=None, c2=None, c3=None):
     #     print(Z1)
     Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=2)
     Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=2)
+
+    min_val = np.min(np.hstack([Z1, Z2, Z3]))
+    max_val = np.max(np.hstack([Z1, Z2, Z3]))
+
     dims = Z1.shape
     f,(ax1,ax2,ax3, cax) = plt.subplots(1,4,gridspec_kw={'width_ratios': [4,4,4,1], "height_ratios": [1]}) #, gridspec_kw={'width_ratios':[1,1,1,0.08]})
     # ax1.get_shared_y_axes().join(ax2,ax3)
@@ -239,8 +242,7 @@ if __name__ == "__main__":
     # print("radius of sensing: ",radius_of_sensing_20)
 
     make_heatmaps(data_10_prep, data_20_prep, data_30_prep)
-    make_mesh(data_10_prep, data_20_prep, data_30_prep)
-    
+    make_mesh(data_20_prep)    
     
     # # # plt.xlabel("X")
     # X = data_10_prep[:,0]
