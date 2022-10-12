@@ -115,7 +115,7 @@ def make_std_plot(unprocessed_data_sets, X, Y, num=3):
 if __name__ == "__main__":
     center = (-0.05, -0.03)
 
-    data_10 = np.load("test_data_multi-sample\DS20_atm_9.9_10_samples_cast-bond_trial1.npy")
+    data_10 = np.load("test_data_multi-sample\DS10_25PSI_6.75_10_samples_cast-bond_trial1.npy")
     data_10_prep_mesh = preprocess1(data_10, mesh=True)
     # data_10_prep_train = preprocess1(data_10, hard_cutoff=1.5, mesh=False)
 
