@@ -58,7 +58,7 @@ def generate_circle_array(radius, center, height):
     z = height * np.ones(x.shape)
     return x, y, z
 
-def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=1):
+def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=10):
     data_cp = data.copy()
     check_list = []
     for i in range(data.shape[0]):  # cycle through rows
@@ -219,14 +219,14 @@ if __name__ == "__main__":
     # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
     # data_20_prep = preprocess(data_20)
 
-    data_10 = np.load("test_data_multi-sample\DS10_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_10 = np.load("test_data_multi-sample\DS20_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_10_prep = preprocess(data_10)
 
-    data_20 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_20 = np.load("test_data_multi-sample\DS20_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_20_prep = preprocess(data_20)
 
-    data_30 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
-    data_30_prep = preprocess(data_20)
+    data_30 = np.load("test_data_multi-sample\DS20_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_30_prep = preprocess(data_30)
    
 
 
