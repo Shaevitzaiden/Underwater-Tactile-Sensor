@@ -60,6 +60,45 @@ def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"b
         ax.plot_trisurf(X, Y, Z, color=colors[i], edgecolors=edgecolors[0], alpha=0.3)
     plt.show()
 
+def filter_and_interp(data, thresh, thresh_bot=-0.5, thresh_top=1):
+    data_cp = data.copy()
+    check_list = []
+    for i in range(data.shape[0]):  # cycle through rows
+        for j in range(data.shape[1]): # cycle through columns
+            
+            if (i == 0) and (j == 0): # Top left corner
+                check_list = [(i,j+1), (i+1,j+1), (i+1,j)]
+            elif (i == data.shape[0]-1) and (j == data.shape[1]-1): # Bottom right corner
+                check_list = [(i,j-1), (i-1,j), (i-1,j-1)]
+            elif (i == 0) and (j == data.shape[1]-1): # Top right corner
+                check_list = [(i,j-1), (i+1,j), (i+1,j-1)]
+            elif (i == data.shape[0]-1) and (j == 0): # Bottom left corner
+                check_list = [(i,j+1), (i-1,j), (i-1,j+1)]
+            elif i == 0: # Top
+                check_list = [(i,j-1), (i,j+1), (i+1,j), (i+1,j-1), (i+1,j+1)]
+            elif j == 0: # Left
+                check_list = [(i-1,j), (i+1,j), (i,j+1), (i-1,j+1), (i+1,j+1)]
+            elif i == (data.shape[0]-1): # bottom
+                check_list = [(i,j-1), (i,j+1), (i-1,j), (i-1,j-1), (i-1,j+1)]
+            elif j == (data.shape[1]-1): # right
+                check_list = [(i-1,j), (i+1,j), (i,j-1), (i-1,j-1), (i+1,j-1)]
+            else: # Anywhere in the middle
+                check_list = [(i-1,j-1), (i-1,j), (i-1,j+1), (i,j-1), (i,j+1), (i+1,j-1), (i+1,j), (i+1,j+1)]
+
+            check_list_vals = np.array([data[idx[0],idx[1]] for idx in check_list])
+            if (data[i,j] > thresh_top) or (data[i,j] < thresh_bot):
+                more_than_thresh_bot = check_list_vals > thresh_bot
+                check_list_vals = check_list_vals[more_than_thresh_bot]
+                less_than_thresh_top = check_list_vals < thresh_top
+                check_list_vals = check_list_vals[less_than_thresh_top]
+                
+                data[i,j] = np.mean(check_list_vals)
+
+            while np.abs(data[i,j] - np.mean(check_list_vals)) > thresh:
+                data[i,j] = np.mean(check_list_vals)
+                
+    return data
+
 def generate_circle_array(radius, center, height):
     angles = np.linspace(0, 2*np.pi, 200)
     x = radius * np.cos(angles) + center[0]
@@ -70,14 +109,6 @@ def generate_circle_array(radius, center, height):
 def make_heatmaps(data1):
     Z1 = data1[:,2]
 
-    min_val = np.min(Z1)
-    max_val = np.max(Z1)
-
-    x_min = np.min(data1[:,0])
-    x_max = np.max(data1[:,0])
-    y_min = np.min(data1[:,1])
-    y_max = np.max(data1[:,1])
-
     # find the dimensions for x and y by adding vals to a set
     x_set = set()
     y_set = set()
@@ -87,8 +118,11 @@ def make_heatmaps(data1):
     x_dim = len(x_set)
     y_dim = len(y_set)
 
-    Z1 = Z1.reshape((y_dim, x_dim))
+    Z1 = filter_and_interp(Z1.reshape((y_dim, x_dim)), 5, thresh_bot=-0.5, thresh_top=4)
 
+    min_val = np.min(Z1)
+    max_val = np.max(Z1)
+   
     f, ax1 = plt.subplots()
     pos = ax1.imshow(Z1, cmap='Spectral')
     f.colorbar(pos, ax=ax1)
@@ -101,14 +135,7 @@ def make_heatmaps(data1):
 
     plt.show()
 
-def make_std_plot(unprocessed_data_sets, X, Y, num=3):
-    fig = plt.figure()
-    ax = fig.add_subplot(111,projection="3d")
-    for data in unprocessed_data_sets[0:num]:
-        stds = np.std(data, axis=1)
-        Z = stds[:,2]
-        ax.plot_trisurf(X, Y, Z, color="white", edgecolors="black", alpha=0.5)
-    plt.show()
+
 
 
 
