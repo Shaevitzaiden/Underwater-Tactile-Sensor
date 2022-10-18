@@ -276,7 +276,7 @@ class SensorTestBench():
             for i in range(self.stored_data.shape[0]):
                 file.write("{0}\n".format(",".join([str(val) for val in self.stored_data[i].tolist()])))
 
-    def saveArray(self, title="test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial1.npy"):
+    def saveArray(self, title="test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial2.npy"):
         np.save(title, self.stored_data)
 
     def get_grid_points(self, dims, deltas, border_offsets):
