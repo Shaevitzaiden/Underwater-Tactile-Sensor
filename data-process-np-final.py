@@ -224,10 +224,10 @@ if __name__ == "__main__":
     for i in range(8):
         Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 5, thresh_bot=-0.5, thresh_top=4).flatten()
 
+    # np.savetxt('DS10_atm_6.75_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
     # Shuffle data
     # np.random.shuffle(Z)
     X = Z[:,2:]
-    # X = (X - np.mean(X,axis=0))/np.std(X,axis=0)
     X = (X-np.min(X,axis=0))/(np.max(X,axis=0)-np.min(X,axis=0))
     Y = data_10_prep[:,:2]
     
@@ -239,10 +239,10 @@ if __name__ == "__main__":
     net = NeuralNet(14)
     X_tensor = torch.from_numpy(X).float()
     Y_tensor = torch.from_numpy(Y).float()
-    loss_ot = train_net(net,X_tensor,Y_tensor,10000, lr=0.05)
+    loss_ot = train_net(net,X_tensor,Y_tensor,5000, lr=0.05)
     
     Z = np.hstack((Y,X))
-    rand_rows = np.random.choice(Y.shape[0], size=10, replace=False)
+    rand_rows = np.random.choice(Y.shape[0], size=20, replace=False)
     rand_samples = Z[rand_rows,:]
 
     X_rand = torch.from_numpy(rand_samples[:,2:]).float()
