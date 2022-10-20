@@ -163,7 +163,7 @@ class NeuralNet(nn.Module):
         self.l2 = nn.Linear(hidden, 2)
 
     def forward(self, x):
-        x = torch.relu(self.l1(x))
+        x = torch.sigmoid(self.l1(x))
         x = self.l2(x)
         # x = F.relu(self.l2(x))
         return x
@@ -213,6 +213,15 @@ if __name__ == "__main__":
     data_10_prep = preprocess1(data_10, mesh=False)
     
     Z = data_10_prep.copy()
+    
+    # Trim boundaries
+    cutoff_left = 5.5
+    cutoff_right = 4.5
+    Z = Z[Z[:,0]>cutoff_left,:]
+    x_max = np.max(Z[:,0])
+    Z = Z[Z[:,0]<(x_max-cutoff_right)]
+
+    # Determine matrix dimensions for reshaping
     x_set = set()
     y_set = set()
     for x, y in Z[:,0:2]:
@@ -221,6 +230,7 @@ if __name__ == "__main__":
     x_dim = len(x_set)
     y_dim = len(y_set)
 
+    # Filter and interpolate every sensors mesh
     for i in range(8):
         Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 5, thresh_bot=-0.5, thresh_top=4).flatten()
 
@@ -229,29 +239,28 @@ if __name__ == "__main__":
     # np.random.shuffle(Z)
     X = Z[:,2:]
     X = (X-np.min(X,axis=0))/(np.max(X,axis=0)-np.min(X,axis=0))
-    Y = data_10_prep[:,:2]
+    Y = Z[:,:2]
     
-    # make_heatmaps(np.hstack((Y,X)), pre_filtered=True)
+    make_heatmaps(np.hstack((Y,X)), pre_filtered=True)
     # print(X.shape)
     # print(Y.dtype)
 
 
-    net = NeuralNet(14)
+    net = NeuralNet(12)
     X_tensor = torch.from_numpy(X).float()
     Y_tensor = torch.from_numpy(Y).float()
-    loss_ot = train_net(net,X_tensor,Y_tensor,5000, lr=0.05)
-    
+    loss_ot = train_net(net,X_tensor,Y_tensor,5000, lr=0.1)
+    print("loss at end of training: {0}".format(loss_ot[-1]))
+
     Z = np.hstack((Y,X))
-    rand_rows = np.random.choice(Y.shape[0], size=20, replace=False)
+    rand_rows = np.random.choice(Y.shape[0], size=10, replace=False)
     rand_samples = Z[rand_rows,:]
 
     X_rand = torch.from_numpy(rand_samples[:,2:]).float()
-    print(data_10_prep[0:5,:2])
     Y_rand = rand_samples[:,:2]
-    print(Y_rand)
+
 
     predictions = net.forward(X_rand).detach().numpy()
-    print(predictions)
     plt.plot(loss_ot)
     plt.show()
     for i in range(predictions.shape[0]):
