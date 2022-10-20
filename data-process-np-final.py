@@ -1,7 +1,13 @@
+from pickletools import optimize
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-# from sklearn.neural_network import MLPRegressor
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
 
 def process_set(data, hard_cutoff, mesh):
     pressures = data[:,2:10].copy()
@@ -106,19 +112,33 @@ def generate_circle_array(radius, center, height):
     z = height * np.ones(x.shape)
     return x, y, z
 
-def make_heatmaps(data1):
-    Z1 = data1[:,2]
+def make_heatmaps(data1, pre_filtered=False):
+    if not pre_filtered:
+        Z1 = data1[:,2]
 
-    # find the dimensions for x and y by adding vals to a set
-    x_set = set()
-    y_set = set()
-    for x, y in data1[:,0:2]:
-        x_set.add(x)
-        y_set.add(y)
-    x_dim = len(x_set)
-    y_dim = len(y_set)
+        # find the dimensions for x and y by adding vals to a set
+        x_set = set()
+        y_set = set()
+        for x, y in data1[:,0:2]:
+            x_set.add(x)
+            y_set.add(y)
+        x_dim = len(x_set)
+        y_dim = len(y_set)
 
-    Z1 = filter_and_interp(Z1.reshape((y_dim, x_dim)), 5, thresh_bot=-0.5, thresh_top=4)
+        Z1 = filter_and_interp(Z1.reshape((y_dim, x_dim)), 5, thresh_bot=-0.5, thresh_top=4)
+    else:
+        Z1 = np.max(data1[:,2:], axis=1)
+        print(Z1)
+        print(Z1.shape)
+        x_set = set()
+        y_set = set()
+        for x, y in data1[:,0:2]:
+            x_set.add(x)
+            y_set.add(y)
+        x_dim = len(x_set)
+        y_dim = len(y_set)
+        Z1 = Z1.reshape((y_dim,x_dim))
+
 
     min_val = np.min(Z1)
     max_val = np.max(Z1)
@@ -136,14 +156,39 @@ def make_heatmaps(data1):
     plt.show()
 
 
+class NeuralNet(nn.Module):
+    def __init__(self, hidden) -> None:
+        super(NeuralNet, self).__init__()
+        self.l1 = nn.Linear(8, hidden)
+        self.l2 = nn.Linear(hidden, 2)
+
+    def forward(self, x):
+        x = torch.relu(self.l1(x))
+        x = self.l2(x)
+        # x = F.relu(self.l2(x))
+        return x
+
+
+def train_net(net, x, y, iterations, lr=0.1):
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(net.parameters(), lr=lr)
+    loss_ot = []
+    for i in range(iterations):
+        net.zero_grad()
+        output = net(x)
+        loss = criterion(output, y)
+        loss_ot.append(loss.detach().numpy())
+        loss.backward()
+        optimizer.step()
+    return loss_ot
 
 
 
 if __name__ == "__main__":
     center = (-0.05, -0.03)
-
-    data_10 = np.load("test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial1.npy")
-    data_10_prep_mesh = preprocess1(data_10, mesh=True)
+    """
+    # data_10 = np.load("test_data_multi-sample\\DS20_50PSI_9.9_10_samples_cast-bond_trial1.npy")
+    # data_10_prep_mesh = preprocess1(data_10, mesh=True)
     # data_10_prep_train = preprocess1(data_10, hard_cutoff=1.5, mesh=False)
 
     # locs = data_10_prep_train[:,0:2]
@@ -159,10 +204,57 @@ if __name__ == "__main__":
     # data_30_prep = preprocess(data_30)
     
 
+    # make_heatmaps(data_10_prep_mesh)
+    # make_mesh(data_10_prep_mesh)
+    """
+    # -----------------------------------------------------------------------------------
+    
+    data_10 = np.load("test_data_multi-sample\\DS10_atm_6.75_10_samples_cast-bond_trial1.npy")
+    data_10_prep = preprocess1(data_10, mesh=False)
+    
+    Z = data_10_prep.copy()
+    x_set = set()
+    y_set = set()
+    for x, y in Z[:,0:2]:
+        x_set.add(x)
+        y_set.add(y)
+    x_dim = len(x_set)
+    y_dim = len(y_set)
 
-    # # --------------------------- 
-    make_heatmaps(data_10_prep_mesh)
-    make_mesh(data_10_prep_mesh)
+    for i in range(8):
+        Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 5, thresh_bot=-0.5, thresh_top=4).flatten()
+
+    # Shuffle data
+    # np.random.shuffle(Z)
+    X = Z[:,2:]
+    # X = (X - np.mean(X,axis=0))/np.std(X,axis=0)
+    X = (X-np.min(X,axis=0))/(np.max(X,axis=0)-np.min(X,axis=0))
+    Y = data_10_prep[:,:2]
     
+    # make_heatmaps(np.hstack((Y,X)), pre_filtered=True)
+    # print(X.shape)
+    # print(Y.dtype)
+
+
+    net = NeuralNet(14)
+    X_tensor = torch.from_numpy(X).float()
+    Y_tensor = torch.from_numpy(Y).float()
+    loss_ot = train_net(net,X_tensor,Y_tensor,10000, lr=0.05)
     
+    Z = np.hstack((Y,X))
+    rand_rows = np.random.choice(Y.shape[0], size=10, replace=False)
+    rand_samples = Z[rand_rows,:]
+
+    X_rand = torch.from_numpy(rand_samples[:,2:]).float()
+    print(data_10_prep[0:5,:2])
+    Y_rand = rand_samples[:,:2]
+    print(Y_rand)
+
+    predictions = net.forward(X_rand).detach().numpy()
+    print(predictions)
+    plt.plot(loss_ot)
+    plt.show()
+    for i in range(predictions.shape[0]):
+        plt.plot(Y_rand[i,0],Y_rand[i,1],'ko')
+        plt.plot(predictions[i,0],predictions[i,1],'r*')
     plt.show()

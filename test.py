@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def get_grid_points(dims, deltas, border_offset):
@@ -17,4 +18,8 @@ def get_grid_points(dims, deltas, border_offset):
 
 
 if __name__ == "__main__":
-    print(np.load("test_data_multi-sample/DS20_atm_9.9_10_samples.npy"))
+    a  = np.arange(15)
+    print(a)
+    a = a.reshape((5,3))
+    print(np.max(a, axis=1))
+    
