@@ -157,31 +157,37 @@ def make_heatmaps(data1, pre_filtered=False):
 
 
 class NeuralNet(nn.Module):
-    def __init__(self, hidden) -> None:
+    def __init__(self, hidden1, hidden2) -> None:
         super(NeuralNet, self).__init__()
-        self.l1 = nn.Linear(8, hidden)
-        self.l2 = nn.Linear(hidden, 2)
+        self.l1 = nn.Linear(8, hidden1)
+        self.l2 = nn.Linear(hidden1, hidden2)
+        self.l3 = nn.Linear(hidden2, 2)
 
     def forward(self, x):
         x = torch.sigmoid(self.l1(x))
-        x = self.l2(x)
+        x = torch.sigmoid(self.l2(x))
+        x = self.l3(x)
         # x = F.relu(self.l2(x))
         return x
 
 
-def train_net(net, x, y, iterations, lr=0.1):
+def train_net(net, x, y, x_dev, y_dev, iterations, lr=0.1):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(net.parameters(), lr=lr)
-    loss_ot = []
+    loss_ot_t = []
+    loss_ot_dev = []
     for i in range(iterations):
         net.zero_grad()
         output = net(x)
+        output_dev = net(x_dev)
         loss = criterion(output, y)
-        loss_ot.append(loss.detach().numpy())
+        loss_dev = criterion(output_dev, y_dev)
+        loss_ot_t.append(loss.detach().numpy())
+        loss_ot_dev.append(loss_dev.detach().numpy())
         loss.backward()
         optimizer.step()
-    return loss_ot
-
+    return loss_ot_t, loss_ot_dev
+ 
 
 
 if __name__ == "__main__":
@@ -209,14 +215,14 @@ if __name__ == "__main__":
     """
     # -----------------------------------------------------------------------------------
     
-    data_10 = np.load("test_data_multi-sample\\DS10_atm_6.75_10_samples_cast-bond_trial1.npy")
+    data_10 = np.load("test_data_multi-sample\\DS20_atm_9.9_10_samples_cast-bond_trial1.npy")
     data_10_prep = preprocess1(data_10, mesh=False)
     
     Z = data_10_prep.copy()
     
     # Trim boundaries
-    cutoff_left = 5.5
-    cutoff_right = 4.5
+    cutoff_left = 4
+    cutoff_right = 1.5
     Z = Z[Z[:,0]>cutoff_left,:]
     x_max = np.max(Z[:,0])
     Z = Z[Z[:,0]<(x_max-cutoff_right)]
@@ -229,41 +235,64 @@ if __name__ == "__main__":
         y_set.add(y)
     x_dim = len(x_set)
     y_dim = len(y_set)
+    x_min = min(x_set)
+    x_max = max(x_set)
+    y_min = min(y_set)
+    y_max = max(y_set)
 
     # Filter and interpolate every sensors mesh
     for i in range(8):
-        Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 5, thresh_bot=-0.5, thresh_top=4).flatten()
+        Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 7, thresh_bot=-0.5, thresh_top=5).flatten()
 
-    # np.savetxt('DS10_atm_6.75_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
+    # np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
     # Shuffle data
     # np.random.shuffle(Z)
-    X = Z[:,2:]
-    X = (X-np.min(X,axis=0))/(np.max(X,axis=0)-np.min(X,axis=0))
-    Y = Z[:,:2]
+    Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
+    Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
+    Z_dev = Z[Z_dev_idx].copy()
+    Z_train = np.delete(Z, Z_dev_idx, axis=0)
     
-    make_heatmaps(np.hstack((Y,X)), pre_filtered=True)
-    # print(X.shape)
-    # print(Y.dtype)
+    X_train = Z_train[:,2:]
+    Y_train = Z_train[:,:2]
+    
+    X_dev = Z_dev[:,2:]
+    Y_dev = Z_dev[:,:2]
+
+    # make_heatmaps(np.hstack((Y,X)), pre_filtered=True)
+    # plt.show()
+    # # print(X.shape)
+    # # print(Y.dtype)
 
 
-    net = NeuralNet(12)
-    X_tensor = torch.from_numpy(X).float()
-    Y_tensor = torch.from_numpy(Y).float()
-    loss_ot = train_net(net,X_tensor,Y_tensor,5000, lr=0.1)
-    print("loss at end of training: {0}".format(loss_ot[-1]))
+    net = NeuralNet(16,12)
+    
+    X_train_tensor = torch.from_numpy(X_train).float()
+    Y_train_tensor = torch.from_numpy(Y_train).float()
+    X_dev_tensor = torch.from_numpy(X_dev).float()
+    Y_dev_tensor = torch.from_numpy(Y_dev).float()
+    loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 5000, lr=0.05)
+    print("loss at end of training: {0}, {1}".format(loss_ot_t[-1], loss_ot_dev[-1]))
 
-    Z = np.hstack((Y,X))
-    rand_rows = np.random.choice(Y.shape[0], size=10, replace=False)
-    rand_samples = Z[rand_rows,:]
+    # Z = np.hstack((Y_dev,X_dev))
+    rand_rows = np.random.choice(Y_dev.shape[0], size=20, replace=False)
+    rand_samples = Z_dev[rand_rows,:]
 
     X_rand = torch.from_numpy(rand_samples[:,2:]).float()
     Y_rand = rand_samples[:,:2]
 
 
     predictions = net.forward(X_rand).detach().numpy()
-    plt.plot(loss_ot)
+    plt.plot(loss_ot_t)
+    plt.plot(loss_ot_dev)
     plt.show()
     for i in range(predictions.shape[0]):
         plt.plot(Y_rand[i,0],Y_rand[i,1],'ko')
         plt.plot(predictions[i,0],predictions[i,1],'r*')
+    ax = plt.gca()
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+
+    ax.set_aspect('equal', adjustable='box')
+    # plt.xticks(np.arange(0,1, step=(x_max-x_min)/(x_dim/2)))
     plt.show()
+    
