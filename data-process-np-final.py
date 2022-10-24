@@ -226,8 +226,10 @@ if __name__ == "__main__":
     
     data_sets = [data_10_prep, data_10_25_prep, data_10_50_prep]
     pressure_strs = ["atm", "25PSI", "50PSI"]
-    num_network_trials = 2
+    pressure_colors = ["*k", "ob", ".r"]
+    num_network_trials = 25
     network_mses = np.zeros((num_network_trials,3))
+    network_mses_plot = np.zeros((num_network_trials,3))
     
     for ds_idx, ds in enumerate(data_sets):
         Z = ds.copy()
@@ -261,7 +263,6 @@ if __name__ == "__main__":
         Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
         
         for i in range(num_network_trials):
-            print(Z.shape)
             Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
             Z_dev = Z[Z_dev_idx].copy()
             Z_train = np.delete(Z, Z_dev_idx, axis=0)
@@ -284,29 +285,40 @@ if __name__ == "__main__":
             Y_train_tensor = torch.from_numpy(Y_train).float()
             X_dev_tensor = torch.from_numpy(X_dev).float()
             Y_dev_tensor = torch.from_numpy(Y_dev).float()
-            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 5000, lr=0.05)
+            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.05)
             print("loss at end of training for {0} #{1}: {2}, {3}".format(pressure_strs[ds_idx], i, loss_ot_t[-1], loss_ot_dev[-1]))
-
-    # Z = np.hstack((Y_dev,X_dev))
-    rand_rows = np.random.choice(Y_dev.shape[0], size=20, replace=False)
-    rand_samples = Z_dev[rand_rows,:]
-
-    X_rand = torch.from_numpy(rand_samples[:,2:]).float()
-    Y_rand = rand_samples[:,:2]
-
-
-    predictions = net.forward(X_rand).detach().numpy()
-    plt.plot(loss_ot_t)
-    plt.plot(loss_ot_dev)
+            network_mses[i, ds_idx] = loss_ot_dev[-1]
+            # network_mses_plot[i, ds_idx] = ds_idx
+            plt.plot(ds_idx, loss_ot_dev[-1], pressure_colors[ds_idx])
+    
+    means = np.mean(network_mses,axis=0)
+    print(means)
+    std_errors = np.std(network_mses,axis=0)
+    print(std_errors)
+    plt.xticks(np.arange(3), pressure_strs)
+    plt.xlabel("Pressure (PSIG)")
+    plt.ylabel("MSE")
     plt.show()
-    for i in range(predictions.shape[0]):
-        plt.plot(Y_rand[i,0],Y_rand[i,1],'ko')
-        plt.plot(predictions[i,0],predictions[i,1],'r*')
-    ax = plt.gca()
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
+    # # Z = np.hstack((Y_dev,X_dev))
+    # rand_rows = np.random.choice(Y_dev.shape[0], size=20, replace=False)
+    # rand_samples = Z_dev[rand_rows,:]
 
-    ax.set_aspect('equal', adjustable='box')
-    # plt.xticks(np.arange(0,1, step=(x_max-x_min)/(x_dim/2)))
-    plt.show()
+    # X_rand = torch.from_numpy(rand_samples[:,2:]).float()
+    # Y_rand = rand_samples[:,:2]
+
+
+    # predictions = net.forward(X_rand).detach().numpy()
+    # plt.plot(loss_ot_t)
+    # plt.plot(loss_ot_dev)
+    # plt.show()
+    # for i in range(predictions.shape[0]):
+    #     plt.plot(Y_rand[i,0],Y_rand[i,1],'ko')
+    #     plt.plot(predictions[i,0],predictions[i,1],'r*')
+    # ax = plt.gca()
+    # plt.xlim(x_min, x_max)
+    # plt.ylim(y_min, y_max)
+
+    # ax.set_aspect('equal', adjustable='box')
+    # # plt.xticks(np.arange(0,1, step=(x_max-x_min)/(x_dim/2)))
+    # plt.show()
     
