@@ -1,0 +1,10 @@
+Data description for the grid tactile sensors:
+
+Structure: 
+col0: X pos
+col1: Y pos
+col2-col9: These columns are the tactile sensor data from sensor 0 to 7. 
+
+Description:
+X and Y: The x and y positions are based off an origin in the top left of the sensing grid. Positive x is to the right, and positive y is down the sensor. The data has been preprocessed to trim the sides down that exceed the sensing range (without doing this the neural network struggles to learn).
+Tactile data: These are the loaded pressure readings minus the unloaded (ambient) pressure readings. The units are PSIG.

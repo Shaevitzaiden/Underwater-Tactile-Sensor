@@ -217,6 +217,12 @@ if __name__ == "__main__":
     
     data_10 = np.load("test_data_multi-sample\\DS20_atm_9.9_10_samples_cast-bond_trial1.npy")
     data_10_prep = preprocess1(data_10, mesh=False)
+
+    data_10_25 = np.load("test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial1.npy")
+    data_10_25_prep = preprocess1(data_10, mesh=False)
+    
+    data_10_50 = np.load("test_data_multi-sample\\DS20_50PSI_9.9_10_samples_cast-bond_trial1.npy")
+    data_10_50_prep = preprocess1(data_10, mesh=False)
     
     Z = data_10_prep.copy()
     
@@ -244,7 +250,7 @@ if __name__ == "__main__":
     for i in range(8):
         Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 7, thresh_bot=-0.5, thresh_top=5).flatten()
 
-    # np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
+    #  np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
     # Shuffle data
     # np.random.shuffle(Z)
     Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
