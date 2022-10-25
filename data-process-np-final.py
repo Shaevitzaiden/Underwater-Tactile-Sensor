@@ -165,9 +165,9 @@ class NeuralNet(nn.Module):
 
     def forward(self, x):
         x = torch.sigmoid(self.l1(x))
+        # x = self.l2(x)
         x = torch.sigmoid(self.l2(x))
         x = self.l3(x)
-        # x = F.relu(self.l2(x))
         return x
 
 
@@ -279,13 +279,13 @@ if __name__ == "__main__":
             # # print(Y.dtype)
 
 
-            net = NeuralNet(16,12)
+            net = NeuralNet(8,16)
             
             X_train_tensor = torch.from_numpy(X_train).float()
             Y_train_tensor = torch.from_numpy(Y_train).float()
             X_dev_tensor = torch.from_numpy(X_dev).float()
             Y_dev_tensor = torch.from_numpy(Y_dev).float()
-            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.05)
+            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.1)
             print("loss at end of training for {0} #{1}: {2}, {3}".format(pressure_strs[ds_idx], i, loss_ot_t[-1], loss_ot_dev[-1]))
             network_mses[i, ds_idx] = loss_ot_dev[-1]
             # network_mses_plot[i, ds_idx] = ds_idx
