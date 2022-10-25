@@ -234,7 +234,7 @@ if __name__ == "__main__":
     for ds_idx, ds in enumerate(data_sets):
         Z = ds.copy()
         # Trim boundaries
-        cutoff_left = 4
+        cutoff_left = 4.25
         cutoff_right = 1.5
         Z = Z[Z[:,0]>cutoff_left,:]
         x_max = np.max(Z[:,0])
@@ -279,13 +279,13 @@ if __name__ == "__main__":
             # # print(Y.dtype)
 
 
-            net = NeuralNet(8,16)
+            net = NeuralNet(10,10)
             
             X_train_tensor = torch.from_numpy(X_train).float()
             Y_train_tensor = torch.from_numpy(Y_train).float()
             X_dev_tensor = torch.from_numpy(X_dev).float()
             Y_dev_tensor = torch.from_numpy(Y_dev).float()
-            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.1)
+            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.05)
             print("loss at end of training for {0} #{1}: {2}, {3}".format(pressure_strs[ds_idx], i, loss_ot_t[-1], loss_ot_dev[-1]))
             network_mses[i, ds_idx] = loss_ot_dev[-1]
             # network_mses_plot[i, ds_idx] = ds_idx
