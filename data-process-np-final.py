@@ -215,7 +215,7 @@ if __name__ == "__main__":
     """
     # -----------------------------------------------------------------------------------
     
-    data_10 = np.load("test_data_multi-sample\\DS20_atm_9.9_10_samples_cast-bond_trial1.npy")
+    data_10 = np.load("test_data_multi-sample\\DS10_atm_6.75_10_samples_cast-bond_trial1.npy")
     data_10_prep = preprocess1(data_10, mesh=False)
 
     data_10_25 = np.load("test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial1.npy")
@@ -227,8 +227,8 @@ if __name__ == "__main__":
     Z = data_10_prep.copy()
     
     # Trim boundaries
-    cutoff_left = 4
-    cutoff_right = 1.5
+    cutoff_left = 4.25
+    cutoff_right = 3.25
     Z = Z[Z[:,0]>cutoff_left,:]
     x_max = np.max(Z[:,0])
     Z = Z[Z[:,0]<(x_max-cutoff_right)]
@@ -264,41 +264,41 @@ if __name__ == "__main__":
     X_dev = Z_dev[:,2:]
     Y_dev = Z_dev[:,:2]
 
-    # make_heatmaps(np.hstack((Y,X)), pre_filtered=True)
+    make_heatmaps(Z, pre_filtered=True)
     # plt.show()
     # # print(X.shape)
     # # print(Y.dtype)
 
 
-    net = NeuralNet(16,12)
+    # net = NeuralNet(16,12)
     
-    X_train_tensor = torch.from_numpy(X_train).float()
-    Y_train_tensor = torch.from_numpy(Y_train).float()
-    X_dev_tensor = torch.from_numpy(X_dev).float()
-    Y_dev_tensor = torch.from_numpy(Y_dev).float()
-    loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 5000, lr=0.05)
-    print("loss at end of training: {0}, {1}".format(loss_ot_t[-1], loss_ot_dev[-1]))
+    # X_train_tensor = torch.from_numpy(X_train).float()
+    # Y_train_tensor = torch.from_numpy(Y_train).float()
+    # X_dev_tensor = torch.from_numpy(X_dev).float()
+    # Y_dev_tensor = torch.from_numpy(Y_dev).float()
+    # loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 5000, lr=0.05)
+    # print("loss at end of training: {0}, {1}".format(loss_ot_t[-1], loss_ot_dev[-1]))
 
-    # Z = np.hstack((Y_dev,X_dev))
-    rand_rows = np.random.choice(Y_dev.shape[0], size=20, replace=False)
-    rand_samples = Z_dev[rand_rows,:]
+    # # Z = np.hstack((Y_dev,X_dev))
+    # rand_rows = np.random.choice(Y_dev.shape[0], size=20, replace=False)
+    # rand_samples = Z_dev[rand_rows,:]
 
-    X_rand = torch.from_numpy(rand_samples[:,2:]).float()
-    Y_rand = rand_samples[:,:2]
+    # X_rand = torch.from_numpy(rand_samples[:,2:]).float()
+    # Y_rand = rand_samples[:,:2]
 
 
-    predictions = net.forward(X_rand).detach().numpy()
-    plt.plot(loss_ot_t)
-    plt.plot(loss_ot_dev)
-    plt.show()
-    for i in range(predictions.shape[0]):
-        plt.plot(Y_rand[i,0],Y_rand[i,1],'ko')
-        plt.plot(predictions[i,0],predictions[i,1],'r*')
-    ax = plt.gca()
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
+    # predictions = net.forward(X_rand).detach().numpy()
+    # plt.plot(loss_ot_t)
+    # plt.plot(loss_ot_dev)
+    # plt.show()
+    # for i in range(predictions.shape[0]):
+    #     plt.plot(Y_rand[i,0],Y_rand[i,1],'ko')
+    #     plt.plot(predictions[i,0],predictions[i,1],'r*')
+    # ax = plt.gca()
+    # plt.xlim(x_min, x_max)
+    # plt.ylim(y_min, y_max)
 
-    ax.set_aspect('equal', adjustable='box')
-    # plt.xticks(np.arange(0,1, step=(x_max-x_min)/(x_dim/2)))
+    # ax.set_aspect('equal', adjustable='box')
+    # # plt.xticks(np.arange(0,1, step=(x_max-x_min)/(x_dim/2)))
     plt.show()
     
