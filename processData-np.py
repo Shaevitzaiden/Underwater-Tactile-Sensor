@@ -58,7 +58,7 @@ def generate_circle_array(radius, center, height):
     z = height * np.ones(x.shape)
     return x, y, z
 
-def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=10):
+def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=1):
     data_cp = data.copy()
     check_list = []
     for i in range(data.shape[0]):  # cycle through rows
@@ -91,7 +91,8 @@ def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=10):
                 check_list_vals = check_list_vals[less_than_thresh_top]
                 
                 data[i,j] = np.mean(check_list_vals)
-            
+
+          
             # good_check_list = check_list_vals > 0
             # check_list_vals = check_list_vals[good_check_list]
             # if np.abs(data[i,j]) > scale*np.mean(check_list_vals):
@@ -102,21 +103,22 @@ def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=10):
 
 
 
-def make_heatmaps(data1, data2, data3, c1=None, c2=None, c3=None):
+def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     Z1 = data1[:,2]
     Z2 = data2[:,2]
     Z3 = data3[:,2]
-
+    Z4 = d4[:,2]
+    Z5 = d5[:,2]
+    Z6 = d6[:,2]
 
 
     grid_dim = int(np.sqrt(data1.shape[0]))
     Z1 = filter_and_interp(Z1.reshape((grid_dim, grid_dim)), scale=2)
-    # print(Z1)
-    # for i in range(0):
-    #     Z1 = filter_and_interp(Z1, scale=2)
-    #     print(Z1)
     Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=2)
-    Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=2)
+    Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=2, thresh_top=1.4)
+    Z4 = filter_and_interp(Z4.reshape((grid_dim, grid_dim)), scale=2, thresh_top=3)
+    Z5 = filter_and_interp(Z5.reshape((grid_dim, grid_dim)), scale=2, thresh_top=3)
+    Z6 = filter_and_interp(Z6.reshape((grid_dim, grid_dim)), scale=2, thresh_top=3)
 
     min_val = np.min(np.hstack([Z1, Z2, Z3]))
     max_val = np.max(np.hstack([Z1, Z2, Z3]))
@@ -219,16 +221,23 @@ if __name__ == "__main__":
     # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
     # data_20_prep = preprocess(data_20)
 
-    data_10 = np.load("test_data_multi-sample\DS20_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
-    data_10_prep = preprocess(data_10)
+    data_10_atm = np.load("test_data_multi-sample\DS10_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_10_atm_prep = preprocess(data_10_atm)
 
-    data_20 = np.load("test_data_multi-sample\DS20_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
-    data_20_prep = preprocess(data_20)
+    data_10_25 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_10_25_prep = preprocess(data_10_25)
 
-    data_30 = np.load("test_data_multi-sample\DS20_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
-    data_30_prep = preprocess(data_30)
+    data_10_50 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_10_50_prep = preprocess(data_10_50)
    
+    data_20_atm = np.load("test_data_multi-sample\DS10_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_20_atm_prep = preprocess(data_20_atm)
 
+    data_20_25 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_20_25_prep = preprocess(data_20_25)
+
+    data_20_50 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_20_50_prep = preprocess(data_20_50)
 
     # # --------------------------- 
     # data_slice_10 = diagonal_slice(data_10_prep, plot=True)
@@ -241,8 +250,8 @@ if __name__ == "__main__":
     # circle_points_20 = generate_circle_array(radius_of_sensing_20, center, height_of_radius_20)
     # print("radius of sensing: ",radius_of_sensing_20)
 
-    make_heatmaps(data_10_prep, data_20_prep, data_30_prep)
-    make_mesh(data_20_prep)    
+    make_heatmaps(data_10_atm_prep, data_10_25_prep, data_10_50_prep)
+    make_mesh(data_10_50_prep)    
     
     # # # plt.xlabel("X")
     # X = data_10_prep[:,0]
