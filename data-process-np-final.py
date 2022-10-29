@@ -223,15 +223,29 @@ if __name__ == "__main__":
     data_10_prep = preprocess1(data_10, mesh=False)
 
     data_10_25 = np.load("test_data_multi-sample\\DS10_25PSI_6.75_10_samples_cast-bond_trial1.npy")
-    data_10_25_prep = preprocess1(data_10, mesh=False)
+    data_10_25_prep = preprocess1(data_10_25, mesh=False)
     
     data_10_50 = np.load("test_data_multi-sample\\DS10_50PSI_6.75_10_samples_cast-bond_trial1.npy")
-    data_10_50_prep = preprocess1(data_10, mesh=False)
+    data_10_50_prep = preprocess1(data_10_50, mesh=False)
     
+
+    # data_20 = np.load("test_data_multi-sample\\DS20_atm_9.9_10_samples_cast-bond_trial1.npy")
+    # data_20_prep = preprocess1(data_10, mesh=False)
+
+    # data_20_25 = np.load("test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial1.npy")
+    # data_20_25_prep = preprocess1(data_10, mesh=False)
+    
+    # data_20_50 = np.load("test_data_multi-sample\\DS20_50PSI_9.9_10_samples_cast-bond_trial1.npy")
+    # data_20_50_prep = preprocess1(data_10, mesh=False)
+
+
+
     data_sets = [data_10_prep, data_10_25_prep, data_10_50_prep]
+    # data_sets = [data_10_25_prep]
     pressure_strs = ["atm", "25PSI", "50PSI"]
     pressure_colors = ["*k", "ob", ".r"]
-    num_network_trials = 100
+    threshes = [5, 2.7, 5]
+    num_network_trials = 50
     network_mses = np.zeros((num_network_trials,3))
     network_mses_plot = np.zeros((num_network_trials,3))
     
@@ -259,7 +273,7 @@ if __name__ == "__main__":
 
         # Filter and interpolate every sensors mesh
         for i in range(8):
-            Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 7, thresh_bot=-0.5, thresh_top=5).flatten()
+            Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 3, thresh_bot=-0.5, thresh_top=threshes[ds_idx]).flatten()
 
         #  np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
         # Shuffle data
@@ -281,8 +295,6 @@ if __name__ == "__main__":
             # plt.show()
             # print(X.shape)
             # print(Y.dtype)
-
-
             net = NeuralNet(10,10)
             
             X_train_tensor = torch.from_numpy(X_train).float()
@@ -294,6 +306,7 @@ if __name__ == "__main__":
             network_mses[i, ds_idx] = loss_ot_dev[-1]
             # network_mses_plot[i, ds_idx] = ds_idx
             plt.plot(ds_idx, loss_ot_dev[-1], pressure_colors[ds_idx])
+
     
     network_mses = np.sqrt(network_mses)
     means = np.mean(network_mses,axis=0)
