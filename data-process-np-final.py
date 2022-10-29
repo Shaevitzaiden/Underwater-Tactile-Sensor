@@ -228,78 +228,78 @@ if __name__ == "__main__":
     data_10_50 = np.load("test_data_multi-sample\\DS10_50PSI_6.75_10_samples_cast-bond_trial1.npy")
     data_10_50_prep = preprocess1(data_10, mesh=False)
     
-    # data_sets = [data_10_prep, data_10_25_prep, data_10_50_prep]
-    # pressure_strs = ["atm", "25PSI", "50PSI"]
-    # pressure_colors = ["*k", "ob", ".r"]
-    # num_network_trials = 50
-    # network_mses = np.zeros((num_network_trials,3))
-    # network_mses_plot = np.zeros((num_network_trials,3))
+    data_sets = [data_10_prep, data_10_25_prep, data_10_50_prep]
+    pressure_strs = ["atm", "25PSI", "50PSI"]
+    pressure_colors = ["*k", "ob", ".r"]
+    num_network_trials = 100
+    network_mses = np.zeros((num_network_trials,3))
+    network_mses_plot = np.zeros((num_network_trials,3))
     
-    # for ds_idx, ds in enumerate(data_sets):
-    #     Z = ds.copy()
-    #     # Trim boundaries
-    #     cutoff_left = 4.5
-    #     cutoff_right = 3.5
-    #     Z = Z[Z[:,0]>cutoff_left,:]
-    #     x_max = np.max(Z[:,0])
-    #     Z = Z[Z[:,0]<(x_max-cutoff_right)]
+    for ds_idx, ds in enumerate(data_sets):
+        Z = ds.copy()
+        # Trim boundaries
+        cutoff_left = 4.25
+        cutoff_right = 3.25
+        Z = Z[Z[:,0]>cutoff_left,:]
+        x_max = np.max(Z[:,0])
+        Z = Z[Z[:,0]<(x_max-cutoff_right)]
 
-    #     # Determine matrix dimensions for reshaping
-    #     x_set = set()
-    #     y_set = set()
-    #     for x, y in Z[:,0:2]:
-    #         x_set.add(x)
-    #         y_set.add(y)
-    #     x_dim = len(x_set)
-    #     y_dim = len(y_set)
-    #     x_min = min(x_set)
-    #     x_max = max(x_set)
-    #     y_min = min(y_set)
-    #     y_max = max(y_set)
+        # Determine matrix dimensions for reshaping
+        x_set = set()
+        y_set = set()
+        for x, y in Z[:,0:2]:
+            x_set.add(x)
+            y_set.add(y)
+        x_dim = len(x_set)
+        y_dim = len(y_set)
+        x_min = min(x_set)
+        x_max = max(x_set)
+        y_min = min(y_set)
+        y_max = max(y_set)
 
-    #     # Filter and interpolate every sensors mesh
-    #     for i in range(8):
-    #         Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 7, thresh_bot=-0.5, thresh_top=5).flatten()
+        # Filter and interpolate every sensors mesh
+        for i in range(8):
+            Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 7, thresh_bot=-0.5, thresh_top=5).flatten()
 
-    #     #  np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
-    #     # Shuffle data
-    #     # np.random.shuffle(Z)
-    #     Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
+        #  np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
+        # Shuffle data
+        # np.random.shuffle(Z)
+        Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
         
-    #     for i in range(num_network_trials):
-    #         Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
-    #         Z_dev = Z[Z_dev_idx].copy()
-    #         Z_train = np.delete(Z, Z_dev_idx, axis=0)
+        for i in range(num_network_trials):
+            Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
+            Z_dev = Z[Z_dev_idx].copy()
+            Z_train = np.delete(Z, Z_dev_idx, axis=0)
             
-    #         X_train = Z_train[:,2:]
-    #         Y_train = Z_train[:,:2]
+            X_train = Z_train[:,2:]
+            Y_train = Z_train[:,:2]
             
-    #         X_dev = Z_dev[:,2:]
-    #         Y_dev = Z_dev[:,:2]
+            X_dev = Z_dev[:,2:]
+            Y_dev = Z_dev[:,:2]
 
-    #         # make_heatmaps(np.hstack((Z[:,:2],Z[:,2:])), pre_filtered=True)
-    #         # plt.show()
-    #         # print(X.shape)
-    #         # print(Y.dtype)
+            # make_heatmaps(np.hstack((Z[:,:2],Z[:,2:])), pre_filtered=True)
+            # plt.show()
+            # print(X.shape)
+            # print(Y.dtype)
 
 
-    #         net = NeuralNet(10,10)
+            net = NeuralNet(10,10)
             
-    #         X_train_tensor = torch.from_numpy(X_train).float()
-    #         Y_train_tensor = torch.from_numpy(Y_train).float()
-    #         X_dev_tensor = torch.from_numpy(X_dev).float()
-    #         Y_dev_tensor = torch.from_numpy(Y_dev).float()
-    #         loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.05)
-    #         print("loss at end of training for {0} #{1}: {2}, {3}".format(pressure_strs[ds_idx], i, loss_ot_t[-1], loss_ot_dev[-1]))
-    #         network_mses[i, ds_idx] = loss_ot_dev[-1]
-    #         # network_mses_plot[i, ds_idx] = ds_idx
-    #         plt.plot(ds_idx, loss_ot_dev[-1], pressure_colors[ds_idx])
+            X_train_tensor = torch.from_numpy(X_train).float()
+            Y_train_tensor = torch.from_numpy(Y_train).float()
+            X_dev_tensor = torch.from_numpy(X_dev).float()
+            Y_dev_tensor = torch.from_numpy(Y_dev).float()
+            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.05)
+            print("loss at end of training for {0} #{1}: {2}, {3}".format(pressure_strs[ds_idx], i, loss_ot_t[-1], loss_ot_dev[-1]))
+            network_mses[i, ds_idx] = loss_ot_dev[-1]
+            # network_mses_plot[i, ds_idx] = ds_idx
+            plt.plot(ds_idx, loss_ot_dev[-1], pressure_colors[ds_idx])
     
-    # network_mses = np.sqrt(network_mses)
-    # means = np.mean(network_mses,axis=0)
-    # print(means)
-    # std_errors = np.std(network_mses,axis=0)
-    # print(std_errors)
+    network_mses = np.sqrt(network_mses)
+    means = np.mean(network_mses,axis=0)
+    print(means)
+    std_errors = np.std(network_mses,axis=0)
+    print(std_errors)
     # plt.xticks(np.arange(3), pressure_strs)
     # plt.xlabel("Pressure (PSIG)")
     # plt.ylabel("MSE")
@@ -307,50 +307,50 @@ if __name__ == "__main__":
     
 
     # # ----------------------------------------------------------------------------------------------------
-    Z = data_10_50_prep.copy()
-    # Trim boundaries
-    cutoff_left = 4
-    cutoff_right = 2.75
-    Z = Z[Z[:,0]>cutoff_left,:]
-    x_max = np.max(Z[:,0])
-    Z = Z[Z[:,0]<(x_max-cutoff_right)]
+    # Z = data_10_50_prep.copy()
+    # # Trim boundaries
+    # cutoff_left = 4
+    # cutoff_right = 2.75
+    # Z = Z[Z[:,0]>cutoff_left,:]
+    # x_max = np.max(Z[:,0])
+    # Z = Z[Z[:,0]<(x_max-cutoff_right)]
 
-    # Determine matrix dimensions for reshaping
-    x_set = set()
-    y_set = set()
-    for x, y in Z[:,0:2]:
-        x_set.add(x)
-        y_set.add(y)
-    x_dim = len(x_set)
-    y_dim = len(y_set)
-    x_min = min(x_set)
-    x_max = max(x_set)
-    y_min = min(y_set)
-    y_max = max(y_set)
+    # # Determine matrix dimensions for reshaping
+    # x_set = set()
+    # y_set = set()
+    # for x, y in Z[:,0:2]:
+    #     x_set.add(x)
+    #     y_set.add(y)
+    # x_dim = len(x_set)
+    # y_dim = len(y_set)
+    # x_min = min(x_set)
+    # x_max = max(x_set)
+    # y_min = min(y_set)
+    # y_max = max(y_set)
 
-    # Filter and interpolate every sensors mesh
-    for i in range(8):
-        Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 7, thresh_bot=-0.5, thresh_top=5).flatten()
+    # # Filter and interpolate every sensors mesh
+    # for i in range(8):
+    #     Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 7, thresh_bot=-0.5, thresh_top=5).flatten()
 
-    #  np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
-    # Shuffle data
-    # np.random.shuffle(Z)
-    Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
+    # # np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
+    # # Shuffle data
+    # # np.random.shuffle(Z)
+    # Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
     
     
-    Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
-    Z_dev = Z[Z_dev_idx].copy()
-    Z_train = np.delete(Z, Z_dev_idx, axis=0)
+    # Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
+    # Z_dev = Z[Z_dev_idx].copy()
+    # Z_train = np.delete(Z, Z_dev_idx, axis=0)
     
-    X_train = Z_train[:,2:]
-    Y_train = Z_train[:,:2]
+    # X_train = Z_train[:,2:]
+    # Y_train = Z_train[:,:2]
     
-    X_dev = Z_dev[:,2:]
-    Y_dev = Z_dev[:,:2]
+    # X_dev = Z_dev[:,2:]
+    # Y_dev = Z_dev[:,:2]
 
-    make_heatmaps(Z, pre_filtered=True)
-    plt.show()
-    make_mesh(Z, pre=True)
+    # make_heatmaps(Z, pre_filtered=True)
+    # make_mesh(Z, pre=True)
+    # plt.show()
     # print(X.shape)
     # print(Y.dtype)
 

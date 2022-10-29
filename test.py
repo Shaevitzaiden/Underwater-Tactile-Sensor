@@ -18,8 +18,7 @@ def get_grid_points(dims, deltas, border_offset):
 
 
 if __name__ == "__main__":
-    a  = np.arange(15)
-    print(a)
-    a = a.reshape((5,3))
-    print(np.max(a, axis=1))
+    a  = np.array([[1, 0.5, 1],[2, 1.5, 1],[2,1,1]])
+    b = np.array([1, -1, -1])
+    print(np.dot(np.linalg.inv(a),b))
     
