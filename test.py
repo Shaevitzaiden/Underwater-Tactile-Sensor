@@ -37,7 +37,7 @@ def preprocess(data):
     return data
 
 def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"black"), line=None, fig=None, ax=None):
-     # Plot X,Y,Z
+    # Plot X,Y,Z
     if fig is None:
         fig = plt.figure()
     if ax is None:
@@ -147,7 +147,7 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
 
     # f,(ax1,ax2,ax3, cax) = plt.subplots(2,4,gridspec_kw={'width_ratios': [4,4,4,1], "height_ratios": [1]})
     # # ax1.get_shared_y_axes().join(ax2,ax3)
-    c = "Spectral_r"
+    c = "Spectral"
 
     g1 = sns.heatmap(Z1,cmap=c,cbar=False,ax=ax1,square=True, vmin=min_val1, vmax=max_val1)
     g1.set_ylabel('')
@@ -192,12 +192,6 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
 if __name__ == "__main__":
     center = (-0.05, -0.03)
 
-    # data_10 = np.load("test_data_multi-sample\DS20_100g_atm-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-20.npy")
-    # data_10_prep = preprocess(data_10)
-
-    # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
-    # data_20_prep = preprocess(data_20)
-
     data_10_atm = np.load("test_data_multi-sample\DS10_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_10_atm_prep = preprocess(data_10_atm)
 
@@ -216,12 +210,10 @@ if __name__ == "__main__":
     data_20_50 = np.load("test_data_multi-sample\DS20_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_20_50_prep = preprocess(data_20_50)
 
-
-
     make_heatmaps(data_10_atm_prep, data_10_25_prep, data_10_50_prep, data_20_atm_prep, data_20_25_prep, data_20_50_prep)
     make_mesh(data_20_50_prep)    
     
-    # # # plt.xlabel("X")
+    # plt.xlabel("X")
     # X = data_10_prep[:,0]
     # Y = data_10_prep[:,1]
     # make_std_plot([data_10, data_20, data_30], X,Y, num=1)
