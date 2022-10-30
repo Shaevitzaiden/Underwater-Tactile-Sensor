@@ -109,12 +109,6 @@ def filter_and_interp(data, thresh, thresh_bot=-0.5, thresh_top=1):
                 
     return data
 
-def generate_circle_array(radius, center, height):
-    angles = np.linspace(0, 2*np.pi, 200)
-    x = radius * np.cos(angles) + center[0]
-    y = radius * np.sin(angles) + center[1]
-    z = height * np.ones(x.shape)
-    return x, y, z
 
 def make_heatmaps(data1, pre_filtered=False):
     if not pre_filtered:
@@ -161,17 +155,19 @@ def make_heatmaps(data1, pre_filtered=False):
 
 
 class NeuralNet(nn.Module):
-    def __init__(self, hidden1, hidden2) -> None:
+    def __init__(self, hidden1, hidden2, hidden3) -> None:
         super(NeuralNet, self).__init__()
         self.l1 = nn.Linear(8, hidden1)
         self.l2 = nn.Linear(hidden1, hidden2)
-        self.l3 = nn.Linear(hidden2, 2)
+        self.l3 = nn.Linear(hidden2, hidden3)
+        self.l4 = nn.Linear(hidden3, 2)
 
     def forward(self, x):
         x = torch.sigmoid(self.l1(x))
         # x = self.l2(x)
         x = torch.sigmoid(self.l2(x))
-        x = self.l3(x)
+        x = torch.sigmoid(self.l3(x))
+        x = self.l4(x)
         return x
 
 
@@ -195,30 +191,6 @@ def train_net(net, x, y, x_dev, y_dev, iterations, lr=0.1):
 
 
 if __name__ == "__main__":
-    center = (-0.05, -0.03)
-    """
-    # data_10 = np.load("test_data_multi-sample\\DS20_50PSI_9.9_10_samples_cast-bond_trial1.npy")
-    # data_10_prep_mesh = preprocess1(data_10, mesh=True)
-    # data_10_prep_train = preprocess1(data_10, hard_cutoff=1.5, mesh=False)
-
-    # locs = data_10_prep_train[:,0:2]
-    # sens = data_10_prep_train[:,2:]
-
-    # np.savetxt("train_data/DS10_atm_8.75_10-samples_train.csv", data_10_prep_train, delimiter=',')
-
-    # print(radius_of_sensing)
-    # data_20 = np.load("test_data_multi-sample/DS20_100g_50-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-10.npy")
-    # data_20_prep = preprocess(data_20)
-
-    # data_30 = np.load("test_data_multi-sample/DS10_100g_30-PSI_delta-0.5mm_thick-8mm_single-barometer-16_multi-sample-5.npy")
-    # data_30_prep = preprocess(data_30)
-    
-
-    # make_heatmaps(data_10_prep_mesh)
-    # make_mesh(data_10_prep_mesh)
-    """
-    # -----------------------------------------------------------------------------------
-    
     data_10 = np.load("test_data_multi-sample\\DS10_atm_6.75_10_samples_cast-bond_trial1.npy")
     data_10_prep = preprocess1(data_10, mesh=False)
 
@@ -228,32 +200,38 @@ if __name__ == "__main__":
     data_10_50 = np.load("test_data_multi-sample\\DS10_50PSI_6.75_10_samples_cast-bond_trial1.npy")
     data_10_50_prep = preprocess1(data_10_50, mesh=False)
     
+    data_20 = np.load("test_data_multi-sample\\DS20_atm_9.9_10_samples_cast-bond_trial1.npy")
+    data_20_prep = preprocess1(data_20, mesh=False)
 
-    # data_20 = np.load("test_data_multi-sample\\DS20_atm_9.9_10_samples_cast-bond_trial1.npy")
-    # data_20_prep = preprocess1(data_10, mesh=False)
-
-    # data_20_25 = np.load("test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial1.npy")
-    # data_20_25_prep = preprocess1(data_10, mesh=False)
+    data_20_25 = np.load("test_data_multi-sample\\DS20_25PSI_9.9_10_samples_cast-bond_trial1.npy")
+    data_20_25_prep = preprocess1(data_20_25, mesh=False)
     
-    # data_20_50 = np.load("test_data_multi-sample\\DS20_50PSI_9.9_10_samples_cast-bond_trial1.npy")
-    # data_20_50_prep = preprocess1(data_10, mesh=False)
+    data_20_50 = np.load("test_data_multi-sample\\DS20_50PSI_9.9_10_samples_cast-bond_trial1.npy")
+    data_20_50_prep = preprocess1(data_20_50, mesh=False)
 
 
 
-    data_sets = [data_10_prep, data_10_25_prep, data_10_50_prep]
-    # data_sets = [data_10_25_prep]
-    pressure_strs = ["atm", "25PSI", "50PSI"]
-    pressure_colors = ["*k", "ob", ".r"]
-    threshes = [5, 2.7, 5]
-    num_network_trials = 50
-    network_mses = np.zeros((num_network_trials,3))
-    network_mses_plot = np.zeros((num_network_trials,3))
+    data_sets = [data_10_prep, data_10_25_prep, data_10_50_prep, data_20_prep, data_20_25_prep, data_20_50_prep]
+    pressure_strs = ["atm", "25PSI", "50PSI", "atm", "25PSI", "50PSI"]
+    pressure_colors = ["*k", "ob", ".r", "*k", "ob", ".r"]
+    # up_threshes = [5, 2.7, 5]
+    up_threshes = [5, 2.7, 5, 5.5, 3.7, 4]
+    # threshes = [5, 5, 5]
+    threshes = [5, 5, 5, 5, 2.6, 2.5]
+
+    num_network_trials = 1
+    network_mses = np.zeros((num_network_trials,6))
+    network_mses_plot = np.zeros((num_network_trials,6))
     
     for ds_idx, ds in enumerate(data_sets):
         Z = ds.copy()
         # Trim boundaries
-        cutoff_left = 4.25
-        cutoff_right = 3.25
+        if ds_idx <= 2: # dragonskin 10
+            cutoff_left = 4.1
+            cutoff_right = 3
+        else: #dragonskin 20
+            cutoff_left = 3
+            cutoff_right = 0.95
         Z = Z[Z[:,0]>cutoff_left,:]
         x_max = np.max(Z[:,0])
         Z = Z[Z[:,0]<(x_max-cutoff_right)]
@@ -273,39 +251,37 @@ if __name__ == "__main__":
 
         # Filter and interpolate every sensors mesh
         for i in range(8):
-            Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), 3, thresh_bot=-0.5, thresh_top=threshes[ds_idx]).flatten()
-
-        #  np.savetxt('DS20_atm_9.9_10_samples_cast-bond_trial1.csv', Z, delimiter=',')
-        # Shuffle data
-        # np.random.shuffle(Z)
+            Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), threshes[ds_idx], 
+                        thresh_bot=-0.5, thresh_top=up_threshes[ds_idx]).flatten()
+        p_max = np.max(Z[:,2:])
+        
         Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
         
         for i in range(num_network_trials):
-            Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
-            Z_dev = Z[Z_dev_idx].copy()
-            Z_train = np.delete(Z, Z_dev_idx, axis=0)
+            # Z_dev_idx = np.random.choice(Z.shape[0], size=int(Z.shape[0]/10), replace=False)
+            # Z_dev = Z[Z_dev_idx].copy()
+            # Z_train = np.delete(Z, Z_dev_idx, axis=0)
             
-            X_train = Z_train[:,2:]
-            Y_train = Z_train[:,:2]
+            # X_train = Z_train[:,2:]
+            # Y_train = Z_train[:,:2]
             
-            X_dev = Z_dev[:,2:]
-            Y_dev = Z_dev[:,:2]
+            # X_dev = Z_dev[:,2:]
+            # Y_dev = Z_dev[:,:2]
 
-            # make_heatmaps(np.hstack((Z[:,:2],Z[:,2:])), pre_filtered=True)
-            # plt.show()
-            # print(X.shape)
-            # print(Y.dtype)
-            net = NeuralNet(10,10)
+            make_heatmaps(np.hstack((Z[:,:2],Z[:,2:])), pre_filtered=True)
+            plt.show()
+
+            # net = NeuralNet(15, 15, 15)
             
-            X_train_tensor = torch.from_numpy(X_train).float()
-            Y_train_tensor = torch.from_numpy(Y_train).float()
-            X_dev_tensor = torch.from_numpy(X_dev).float()
-            Y_dev_tensor = torch.from_numpy(Y_dev).float()
-            loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 4000, lr=0.05)
-            print("loss at end of training for {0} #{1}: {2}, {3}".format(pressure_strs[ds_idx], i, loss_ot_t[-1], loss_ot_dev[-1]))
-            network_mses[i, ds_idx] = loss_ot_dev[-1]
+            # X_train_tensor = torch.from_numpy(X_train).float()
+            # Y_train_tensor = torch.from_numpy(Y_train).float()
+            # X_dev_tensor = torch.from_numpy(X_dev).float()
+            # Y_dev_tensor = torch.from_numpy(Y_dev).float()
+            # loss_ot_t, loss_ot_dev = train_net(net,X_train_tensor,Y_train_tensor, X_dev_tensor, Y_dev_tensor, 5000, lr=0.025)
+            # print("loss at end of training for {0} #{1}: {2}, {3}".format(pressure_strs[ds_idx], i, loss_ot_t[-1], loss_ot_dev[-1]))
+            # network_mses[i, ds_idx] = loss_ot_dev[-1]
             # network_mses_plot[i, ds_idx] = ds_idx
-            plt.plot(ds_idx, loss_ot_dev[-1], pressure_colors[ds_idx])
+            # plt.plot(ds_idx, loss_ot_dev[-1], pressure_colors[ds_idx])
 
     
     network_mses = np.sqrt(network_mses)
