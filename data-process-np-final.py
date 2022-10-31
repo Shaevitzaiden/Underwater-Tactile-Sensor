@@ -315,8 +315,8 @@ if __name__ == "__main__":
             Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), threshes[ds_idx], 
                         thresh_bot=-0.5, thresh_top=up_threshes[ds_idx]).flatten()
         p_max = np.max(Z[:,2:])
-        Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
-        Z[:,2:] = Z[:,2:] * p_max # undo normalization by scaling back to original
+        # Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
+        # Z[:,2:] = Z[:,2:] * p_max # undo normalization by scaling back to original
         data_sets_meshes.append(Z.copy())
 
     make_heatmaps_multi(data_sets_meshes)
