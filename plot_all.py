@@ -107,8 +107,6 @@ def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=1):
     return data
             
 
-
-
 def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     Z1 = data1[:,2]
     Z2 = data2[:,2]
@@ -117,7 +115,8 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     Z5 = d5[:,2]
     Z6 = d6[:,2]
 
-
+    grid_phys_dims_x = (np.min(data1[:,0]), np.max(data1[:,0]))
+    grid_phys_dims_y = (np.min(data1[:,1]), np.max(data1[:,1]))
     grid_dim = int(np.sqrt(data1.shape[0]))
     Z1 = filter_and_interp(Z1.reshape((grid_dim, grid_dim)), scale=5)
     Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=5)
@@ -135,7 +134,7 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     dims = Z1.shape
 
     fig = plt.figure()
-    gs = fig.add_gridspec(2,4, width_ratios=[1,1,1,0.1])
+    gs = fig.add_gridspec(2,4, width_ratios=[1,1,1,0.1], height_ratios=[1,1])
     ax1 = fig.add_subplot(gs[0,0])
     ax2 = fig.add_subplot(gs[0,1])
     ax3 = fig.add_subplot(gs[0,2])
@@ -148,35 +147,66 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     # f,(ax1,ax2,ax3, cax) = plt.subplots(2,4,gridspec_kw={'width_ratios': [4,4,4,1], "height_ratios": [1]})
     # # ax1.get_shared_y_axes().join(ax2,ax3)
     c = "Spectral"
+    lp = 7
+    fs = 12
 
     g1 = sns.heatmap(Z1,cmap=c,cbar=False,ax=ax1,square=True, vmin=min_val1, vmax=max_val1)
-    g1.set_ylabel('')
-    g1.set_xlabel('')
+    g1.set_ylabel('Dragonskin 10', labelpad=lp, fontsize=fs)
+    g1.set_xlabel('a', fontsize=5)
+    g1.xaxis.set_label_position('top')
+    g1.xaxis.label.set_color('white')
+    g1.set_title('Atm', fontsize=fs)
+    
+    tick_locs = np.arange(0, grid_dim, 10)
+    tick_vals = np.linspace(0, grid_phys_dims_y[1]-grid_phys_dims_y[0], num=(np.size(tick_locs))).round(0).astype(np.int16)
+    g1.set_yticks(tick_locs)
+    g1.set_yticklabels(tick_vals)
+
+    tick_locs_x = np.arange(0, grid_dim, 10)
+    tick_vals_x = np.linspace(0, grid_phys_dims_x[1]-grid_phys_dims_x[0], num=(np.size(tick_locs_x))).round(0).astype(np.int16)
+    g1.set_xticks(tick_locs_x)
+    g1.set_xticklabels(tick_vals_x)
     
     g2 = sns.heatmap(Z2,cmap=c,cbar=False,ax=ax2,square=True, vmin=min_val1, vmax=max_val1)
-    g2.set_ylabel('')
-    g2.set_xlabel('')
+    g2.set_xlabel('a', fontsize=5)
+    g2.xaxis.set_label_position('top')
+    g2.xaxis.label.set_color('white')
+    g2.set_title('25 PSIG', fontsize=fs)
     g2.set_yticks([])
+    g2.set_xticks(tick_locs_x)
+    g2.set_xticklabels(tick_vals_x)
 
     g3 = sns.heatmap(Z3,cmap=c,ax=ax3,square=True,cbar_ax=cax1,vmin=min_val1, vmax=max_val1)
     g3.set_ylabel('')
-    g3.set_xlabel('')
+    g3.set_xlabel('a', fontsize=5)
+    g3.xaxis.set_label_position('top')
+    g3.xaxis.label.set_color('white')
+    g3.set_title('50 PSIG', fontsize=fs)
     g3.set_yticks([])
+    g3.set_xticks(tick_locs_x)
+    g3.set_xticklabels(tick_vals_x)
 
     g4 = sns.heatmap(Z4,cmap=c,cbar=False,ax=ax4,square=True,vmin=min_val2, vmax=max_val2)
-    g4.set_ylabel('')
+    g4.set_ylabel('Dragonskin 20', labelpad=lp, fontsize=fs)
     g4.set_xlabel('')
-
+    g4.set_yticks(tick_locs)
+    g4.set_yticklabels(tick_vals)
+    g4.set_xticks(tick_locs_x)
+    g4.set_xticklabels(tick_vals_x)
 
     g5 = sns.heatmap(Z5,cmap=c,cbar=False,ax=ax5,square=True,vmin=min_val2, vmax=max_val2)
     g5.set_ylabel('')
     g5.set_xlabel('')
     g5.set_yticks([])
+    g5.set_xticks(tick_locs_x)
+    g5.set_xticklabels(tick_vals_x)
 
     g6 = sns.heatmap(Z6,cmap=c,ax=ax6,square=True,cbar_ax=cax2,vmin=min_val2, vmax=max_val2)
     g6.set_ylabel('')
     g6.set_xlabel('')
     g6.set_yticks([])
+    g6.set_xticks(tick_locs_x)
+    g6.set_xticklabels(tick_vals_x)
 
     
     # may be needed to rotate the ticklabels correctly:
@@ -212,7 +242,7 @@ if __name__ == "__main__":
     data_20_50_prep = preprocess(data_20_50)
 
     make_heatmaps(data_10_atm_prep, data_10_25_prep, data_10_50_prep, data_20_atm_prep, data_20_25_prep, data_20_50_prep)
-    make_mesh(data_20_50_prep)    
+    # make_mesh(data_20_50_prep)    
     
     # plt.xlabel("X")
     # X = data_10_prep[:,0]
