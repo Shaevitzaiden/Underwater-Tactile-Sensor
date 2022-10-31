@@ -52,7 +52,7 @@ def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"b
     if ax is None:
         ax = fig.add_subplot(111, projection='3d')
     if line != None:
-        ax.plot3D(line[0], line[1], line[2], "black",linewidth="5", alpha=1)
+        ax.plot3D(line[0], line[1], line[2], "black", linewidth="5", alpha=1)
     for i, data in enumerate(data_sets):
         X = data[:,0]
         Y = data[:,1]
@@ -165,9 +165,11 @@ def make_heatmaps_multi(data_sets_pre):
     
     min_val1 = np.min(np.hstack(data_sets[:3]))
     max_val1 = np.max(np.hstack(data_sets[:3]))
+    print(max_val1)
 
     min_val2 = np.min(np.hstack(data_sets[3:]))
     max_val2 = np.max(np.hstack(data_sets[3:]))
+    print(max_val2)
 
     # dims = data.shape
 
@@ -186,7 +188,7 @@ def make_heatmaps_multi(data_sets_pre):
     lp = 7
     fs = 12
 
-    g1 = sns.heatmap(data_sets[0],cmap=c,cbar=False,ax=ax1,square=True, vmin=min_val1, vmax=max_val1)
+    g1 = sns.heatmap(data_sets[0],cmap=c,cbar=False,ax=ax1,square=True, vmin=min_val1, vmax=max_val2)
     g1.set_ylabel('Dragonskin 10', labelpad=lp, fontsize=fs)
     g1.set_xlabel('a', fontsize=5)
     g1.xaxis.set_label_position('top')
@@ -274,8 +276,6 @@ if __name__ == "__main__":
     data_20_50 = np.load("test_data_multi-sample\\DS20_50PSI_9.9_10_samples_cast-bond_trial1.npy")
     data_20_50_prep = preprocess1(data_20_50, mesh=False)
 
-
-
     data_sets = [data_10_prep, data_10_25_prep, data_10_50_prep, data_20_prep, data_20_25_prep, data_20_50_prep]
     data_sets_meshes = []
     pressure_strs = ["atm", "25PSI", "50PSI", "atm", "25PSI", "50PSI"]
@@ -315,8 +315,8 @@ if __name__ == "__main__":
             Z[:,i+2] = filter_and_interp(Z[:,i+2].reshape((y_dim, x_dim)), threshes[ds_idx], 
                         thresh_bot=-0.5, thresh_top=up_threshes[ds_idx]).flatten()
         p_max = np.max(Z[:,2:])
-        # Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
-        # Z[:,2:] = Z[:,2:] * p_max # undo normalization by scaling back to original
+        Z[:,2:] = (Z[:,2:]-np.min(Z[:,2:],axis=0))/(np.max(Z[:,2:],axis=0)-np.min(Z[:,2:],axis=0))
+        Z[:,2:] = Z[:,2:] * p_max # undo normalization by scaling back to original
         data_sets_meshes.append(Z.copy())
 
     make_heatmaps_multi(data_sets_meshes)
