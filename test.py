@@ -124,7 +124,7 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=5, thresh_top=1.4)
     Z4 = filter_and_interp(Z4.reshape((grid_dim, grid_dim)), scale=2, thresh_top=6)
     Z5 = filter_and_interp(Z5.reshape((grid_dim, grid_dim)), scale=2, thresh_top=5)
-    Z6 = filter_and_interp(Z6.reshape((grid_dim, grid_dim)), scale=2, thresh_top=5)
+    Z6 = filter_and_interp(Z6.reshape((grid_dim, grid_dim)), scale=1.5, thresh_top=5)
 
     min_val1 = np.min(np.hstack([Z1, Z2, Z3]))
     max_val1 = np.max(np.hstack([Z1, Z2, Z3]))
@@ -185,6 +185,7 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     #     ax.set_xticklabels(tl, rotation=90)
     #     tly = ax.get_yticklabels()
     #     ax.set_yticklabels(tly, rotation=0)
+    plt.tight_layout()
     plt.show()
 
 
