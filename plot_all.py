@@ -119,8 +119,8 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     grid_phys_dims_y = (np.min(data1[:,1]), np.max(data1[:,1]))
     grid_dim = int(np.sqrt(data1.shape[0]))
     Z1 = filter_and_interp(Z1.reshape((grid_dim, grid_dim)), scale=5)
-    Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=5)
-    Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=5, thresh_top=1.4)
+    Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=5, thresh_top=8)
+    Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=3, thresh_top=3)
     Z4 = filter_and_interp(Z4.reshape((grid_dim, grid_dim)), scale=2, thresh_top=6)
     Z5 = filter_and_interp(Z5.reshape((grid_dim, grid_dim)), scale=2, thresh_top=5)
     Z6 = filter_and_interp(Z6.reshape((grid_dim, grid_dim)), scale=1.5, thresh_top=5)
@@ -226,10 +226,10 @@ if __name__ == "__main__":
     data_10_atm = np.load("test_data_multi-sample\DS10_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_10_atm_prep = preprocess(data_10_atm)
 
-    data_10_25 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_10_25 = np.load("test_data_multi-sample\DS10_25PSI_single_21x21_0.5mm_10-samples_cast-bond_trial3.npy")
     data_10_25_prep = preprocess(data_10_25)
 
-    data_10_50 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
+    data_10_50 = np.load("test_data_multi-sample\DS10_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial2.npy")
     data_10_50_prep = preprocess(data_10_50)
    
     data_20_atm = np.load("test_data_multi-sample\DS20_atm_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
