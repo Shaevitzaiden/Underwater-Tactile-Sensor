@@ -36,27 +36,57 @@ def preprocess(data):
     # data = np.flip(data,axis=0)
     return data
 
-def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"black"), line=None, fig=None, ax=None):
+def make_mesh(*data_sets, colors=("white","red","yellow"), edgecolors=("white", "red", "yellow"), line=None, fig=None, ax=None, slice=False):
     # Plot X,Y,Z
+    print(data_sets)
+    if slice:
+        data = []
+        for d in data_sets:
+            dim = d.shape[0]
+            data.append(d[:(int(dim/2)+10),:])
+    else:
+        data = data_sets
     if fig is None:
         fig = plt.figure()
     if ax is None:
         ax = fig.add_subplot(111, projection='3d')
     if line != None:
         ax.plot3D(line[0], line[1], line[2], "black",linewidth="5", alpha=1)
-    for i, data in enumerate(data_sets):
-        X = data[:,0]
-        Y = data[:,1]
-        Z = data[:,2]
-        ax.plot_trisurf(X, Y, Z, color=colors[i], edgecolors=edgecolors[0], alpha=0.3)
+    for i, d in enumerate(data):
+        X = d[:,0]
+        Y = d[:,1]
+        Z = d[:,2]
+        ax.plot_trisurf(X, Y, Z, alpha=0.95)
+    ax.view_init(4,20)
+    ax.set_axis_off()
+    plt.savefig("meshes.png", transparent=True)
     plt.show()
 
-def generate_circle_array(radius, center, height):
-    angles = np.linspace(0, 2*np.pi, 200)
-    x = radius * np.cos(angles) + center[0]
-    y = radius * np.sin(angles) + center[1]
-    z = height * np.ones(x.shape)
-    return x, y, z
+def make_mesh2(*data_sets, colors=("white","red","yellow"), edgecolors=('grey',"black"), line=None, fig=None, ax=None, slice=False):
+    # Plot X,Y,Z
+    print(data_sets)
+    if slice:
+        data = []
+        for d in data_sets:
+            dim = d.shape[0]
+            data.append(d[:(int(dim/2)),:])
+    else:
+        data = data_sets.copy()
+    if fig is None:
+        fig = plt.figure()
+    if ax is None:
+        ax = fig.add_subplot(111, projection='3d')
+    if line != None:
+        ax.plot3D(line[0], line[1], line[2], "black",linewidth="5", alpha=1)
+    for i, d in enumerate(data):
+        xd, yd = d.shape
+        X = np.tile(np.arange(yd), (xd,1))
+        Y = X
+        Z = d
+        print(X.shape, Y.shape, Z.shape)
+        ax.plot_surface(X, Y, Z)
+
+    plt.show()
 
 def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=1):
     data_cp = data.copy()
@@ -104,8 +134,7 @@ def filter_and_interp(data, scale, thresh_bot=-0.5, thresh_top=1):
             # if np.abs(data[i,j]) > scale*np.mean(check_list_vals):
             #     data[i,j] = np.mean(check_list_vals)
                 
-    return data
-            
+    return data          
 
 def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     Z1 = data1[:,2]
@@ -119,12 +148,19 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     grid_phys_dims_y = (np.min(data1[:,1]), np.max(data1[:,1]))
     grid_dim = int(np.sqrt(data1.shape[0]))
     Z1 = filter_and_interp(Z1.reshape((grid_dim, grid_dim)), scale=5)
-    Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=5, thresh_top=8)
-    Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=3, thresh_top=3)
+    Z2 = filter_and_interp(Z2.reshape((grid_dim, grid_dim)), scale=5)
+    Z3 = filter_and_interp(Z3.reshape((grid_dim, grid_dim)), scale=5, thresh_top=1.4)
+    ds10_atm_max = np.max(Z1)
+    ds10_50_max = np.max(Z3)
+
     Z4 = filter_and_interp(Z4.reshape((grid_dim, grid_dim)), scale=2, thresh_top=6)
     Z5 = filter_and_interp(Z5.reshape((grid_dim, grid_dim)), scale=2, thresh_top=5)
     Z6 = filter_and_interp(Z6.reshape((grid_dim, grid_dim)), scale=1.5, thresh_top=5)
+    ds20_atm_max = np.max(Z4)
+    ds20_50_max = np.max(Z6)
 
+    # print(ds10_atm_max, ds10_50_max, (ds10_50_max-ds10_atm_max)/ds10_atm_max)
+    # print(ds20_atm_max, ds20_50_max, (ds20_50_max-ds20_atm_max)/ds20_atm_max)
     min_val1 = np.min(np.hstack([Z1, Z2, Z3]))
     max_val1 = np.max(np.hstack([Z1, Z2, Z3]))
 
@@ -208,15 +244,11 @@ def make_heatmaps(data1, data2, data3, d4, d5, d6, c1=None, c2=None, c3=None):
     g6.set_xticks(tick_locs_x)
     g6.set_xticklabels(tick_vals_x)
 
-    
-    # may be needed to rotate the ticklabels correctly:
-    # for ax in [g1,g2,g3]:
-    #     tl = ax.get_xticklabels()
-    #     ax.set_xticklabels(tl, rotation=90)
-    #     tly = ax.get_yticklabels()
-    #     ax.set_yticklabels(tly, rotation=0)
+
     plt.tight_layout()
     plt.show()
+
+    return (Z1, Z2, Z3, Z4, Z5, Z6)
 
 
 
@@ -241,8 +273,13 @@ if __name__ == "__main__":
     data_20_50 = np.load("test_data_multi-sample\DS20_50PSI_single_21x21_0.5mm_10-samples_cast-bond_trial1.npy")
     data_20_50_prep = preprocess(data_20_50)
 
-    make_heatmaps(data_10_atm_prep, data_10_25_prep, data_10_50_prep, data_20_atm_prep, data_20_25_prep, data_20_50_prep)
-    # make_mesh(data_20_50_prep)    
+    print(data_10_50_prep.shape)
+
+    Z = make_heatmaps(data_10_atm_prep, data_10_25_prep, data_10_50_prep, data_20_atm_prep, data_20_25_prep, data_20_50_prep)
+    # make_mesh(data_10_atm_prep, data_10_25_prep, data_10_50_prep)   
+    # make_mesh(data_10_atm_prep, slice=True)   
+    
+    # make_mesh2(Z[1], Z[2], Z[3], slice=True)    
     
     # plt.xlabel("X")
     # X = data_10_prep[:,0]
