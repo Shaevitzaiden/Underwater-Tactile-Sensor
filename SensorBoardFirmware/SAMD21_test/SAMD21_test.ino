@@ -43,7 +43,7 @@ void setup() {
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Grab stored calibration coefficients from barometers
-  Serial.println("Attempting to grab calibration coefficients from sensors");
+//  Serial.println("Attempting to grab calibration coefficients from sensors");
   byte c_addr[6] = {0xA2, 0xA4, 0xA6, 0xA8, 0xAA, 0xAC}; // C1-C6 calibration value addresses
   //
   //  Loop for population 2d array of calibration values
@@ -56,22 +56,22 @@ void setup() {
     }
   }
 
-  Serial.println("Calibration coefficients acquired");
+//  Serial.println("Calibration coefficients acquired");
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Collect 100 samples, print them, and then divide by time to get sampling rate
   int32_t data[8];
   T1 = millis();
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 10000; i++) {
     data[8] = getData();
     
   }
-  Serial.println("actually flashed2");
-  T2 = millis();
-  double dT = T2 - T1;
-  Serial.println(dT);
-  double samp = 100.0 / ((T2 - T1) / 1000.0);
-  Serial.println(samp);
+//  Serial.println("actually flashed2");
+//  T2 = millis();
+//  double dT = T2 - T1;
+//  Serial.println(dT);
+//  double samp = 100.0 / ((T2 - T1) / 1000.0);
+//  Serial.println(samp);
 }
 
 
@@ -133,9 +133,9 @@ int32_t getData() {
     SENS = c[i][0] * pow(2, 15) + (c[i][2] * dT) / pow(2, 8);
 
     offset_pres[i] = (raw_pres[i] * SENS / pow(2, 21) - OFF) / pow(2, 13);
-//    Serial.print(offset_pres[i]); Serial.print(" ");
+    Serial.print(offset_pres[i]); Serial.print(" ");
   }
-//  Serial.println(" ");
+  Serial.println(" ");
   return offset_pres[8];
 }
 
