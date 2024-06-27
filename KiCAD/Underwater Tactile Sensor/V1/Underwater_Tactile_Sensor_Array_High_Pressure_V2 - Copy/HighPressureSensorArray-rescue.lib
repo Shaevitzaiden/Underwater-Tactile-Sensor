@@ -1,0 +1,71 @@
+EESchema-LIBRARY Version 2.4
+#encoding utf-8
+#
+# 06034C104KAT2A-SamacSys_Parts
+#
+DEF 06034C104KAT2A-SamacSys_Parts C 0 30 Y Y 1 F N
+F0 "C" 350 250 50 H V L CNN
+F1 "06034C104KAT2A-SamacSys_Parts" 350 150 50 H V L CNN
+F2 "CAPC1608X90N" 350 50 50 H I L CNN
+F3 "https://componentsearchengine.com/Datasheets/1/06031A100FAT2A.pdf" 350 -50 50 H I L CNN
+F4 "Multilayer Ceramic Capacitors MLCC - SMD/SMT 4V .1uF X7R 0603 10%" 350 -150 50 H I L CNN "Description"
+F5 "0.9" 350 -250 50 H I L CNN "Height"
+F6 "581-06034C104KAT2A" 350 -350 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/AVX/06034C104KAT2A?qs=EbDiPP9peV90W1IAXf%252BZmA%3D%3D" 350 -450 50 H I L CNN "Mouser Price/Stock"
+F8 "AVX" 350 -550 50 H I L CNN "Manufacturer_Name"
+F9 "06034C104KAT2A" 350 -650 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+P 2 0 1 6 200 0 220 0 N
+P 2 0 1 6 220 100 220 -100 N
+P 2 0 1 6 280 0 300 0 N
+P 2 0 1 6 280 100 280 -100 N
+X ~ 1 0 0 200 R 50 50 0 0 P
+X ~ 2 500 0 200 L 50 50 0 0 P
+ENDDRAW
+ENDDEF
+#
+# MS5837-Sensors_Pressure_Underwater
+#
+DEF MS5837-Sensors_Pressure_Underwater U 0 40 Y Y 1 F N
+F0 "U" 50 0 50 H V C CNN
+F1 "MS5837-Sensors_Pressure_Underwater" 50 100 50 H V C CNN
+F2 "" 50 0 50 H I C CNN
+F3 "" 50 0 50 H I C CNN
+DRAW
+S -150 -50 300 -450 0 1 0 f
+X GND 1 400 -400 100 L 50 50 1 1 U
+X VDD 2 400 -100 100 L 50 50 1 1 I
+X SCL 3 -250 -100 100 R 50 50 1 1 B
+X SDA 4 -250 -400 100 R 50 50 1 1 B
+ENDDRAW
+ENDDEF
+#
+# SolderJumper_3_Bridged12-Jumper
+#
+DEF SolderJumper_3_Bridged12-Jumper JP 0 0 Y N 1 F N
+F0 "JP" -100 -100 50 H V C CNN
+F1 "SolderJumper_3_Bridged12-Jumper" 0 110 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ SolderJumper*Bridged12*
+$ENDFPLIST
+DRAW
+S -40 20 -20 -20 0 1 0 F
+A -40 0 40 901 -901 0 1 0 N -40 40 -40 -40
+A -40 0 40 901 -901 0 1 0 F -40 40 -40 -40
+S -20 40 20 -40 0 1 0 F
+P 2 0 1 0 -100 0 -80 0 N
+P 2 0 1 0 -40 40 -40 -40 N
+P 2 0 1 0 0 -50 0 -40 N
+P 2 0 1 0 40 40 40 -40 N
+P 2 0 1 0 100 0 80 0 N
+A 40 0 40 -899 899 0 1 0 N 40 -40 40 40
+A 40 0 40 -899 899 0 1 0 F 40 -40 40 40
+X A 1 -200 0 100 R 50 50 1 1 P
+X C 2 0 -150 100 U 50 50 1 1 I
+X B 3 200 0 100 L 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+#End Library

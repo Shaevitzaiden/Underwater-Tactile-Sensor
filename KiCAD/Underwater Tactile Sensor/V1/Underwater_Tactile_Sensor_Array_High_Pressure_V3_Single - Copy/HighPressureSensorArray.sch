@@ -1,0 +1,217 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Connection ~ 6165 4315
+Connection ~ 6165 3815
+$Comp
+L power:+3.3V #PWR0117
+U 1 1 61DDC584
+P 6165 3815
+F 0 "#PWR0117" H 6165 3665 50  0001 C CNN
+F 1 "+3.3V" H 6180 3988 50  0000 C CNN
+F 2 "" H 6165 3815 50  0001 C CNN
+F 3 "" H 6165 3815 50  0001 C CNN
+	1    6165 3815
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR0118
+U 1 1 61DDC57E
+P 5235 3565
+F 0 "#PWR0118" H 5235 3415 50  0001 C CNN
+F 1 "+3.3V" H 5250 3738 50  0000 C CNN
+F 2 "" H 5235 3565 50  0001 C CNN
+F 3 "" H 5235 3565 50  0001 C CNN
+	1    5235 3565
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR0119
+U 1 1 61DDC578
+P 5020 3565
+F 0 "#PWR0119" H 5020 3415 50  0001 C CNN
+F 1 "+3.3V" H 5035 3738 50  0000 C CNN
+F 2 "" H 5020 3565 50  0001 C CNN
+F 3 "" H 5020 3565 50  0001 C CNN
+	1    5020 3565
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5020 4215 5285 4215
+Wire Wire Line
+	5020 3865 5020 4215
+Wire Wire Line
+	5235 3915 5285 3915
+Wire Wire Line
+	5235 3865 5235 3915
+$Comp
+L Device:R R15
+U 1 1 61DDC56B
+P 5020 3715
+F 0 "R15" H 5090 3761 50  0000 L CNN
+F 1 "R" H 5090 3670 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 4950 3715 50  0001 C CNN
+F 3 "~" H 5020 3715 50  0001 C CNN
+	1    5020 3715
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R16
+U 1 1 61DDC565
+P 5235 3715
+F 0 "R16" H 5305 3761 50  0000 L CNN
+F 1 "R" H 5305 3670 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 5165 3715 50  0001 C CNN
+F 3 "~" H 5235 3715 50  0001 C CNN
+	1    5235 3715
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5935 4315 5935 4215
+Wire Wire Line
+	6165 4315 5935 4315
+Wire Wire Line
+	5935 3815 6165 3815
+$Comp
+L SamacSys_Parts:06034C104KAT2A C8
+U 1 1 61DDC55B
+P 6165 4315
+F 0 "C8" V 6393 4443 50  0000 L CNN
+F 1 "06034C104KAT2A" H 6460 4443 20  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 6515 4365 50  0001 L CNN
+F 3 "https://componentsearchengine.com/Datasheets/1/06031A100FAT2A.pdf" H 6515 4265 50  0001 L CNN
+F 4 "Multilayer Ceramic Capacitors MLCC - SMD/SMT 4V .1uF X7R 0603 10%" H 6515 4165 50  0001 L CNN "Description"
+F 5 "0.9" H 6515 4065 50  0001 L CNN "Height"
+F 6 "581-06034C104KAT2A" H 6515 3965 50  0001 L CNN "Mouser Part Number"
+F 7 "https://www.mouser.co.uk/ProductDetail/AVX/06034C104KAT2A?qs=EbDiPP9peV90W1IAXf%252BZmA%3D%3D" H 6515 3865 50  0001 L CNN "Mouser Price/Stock"
+F 8 "AVX" H 6515 3765 50  0001 L CNN "Manufacturer_Name"
+F 9 "06034C104KAT2A" H 6515 3665 50  0001 L CNN "Manufacturer_Part_Number"
+	1    6165 4315
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Sensors_Pressure_Underwater:MS5837 U8-CH4
+U 1 1 61DDC54F
+P 5535 3815
+F 0 "U8-CH4" H 5610 3940 50  0000 C CNN
+F 1 "MS5837" H 5610 3849 50  0000 C CNN
+F 2 "HighPressureSensorArray_Footprints:MS5837-30B" H 5585 3815 50  0001 C CNN
+F 3 "" H 5585 3815 50  0001 C CNN
+	1    5535 3815
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0133
+U 1 1 61DDC58B
+P 6165 4315
+F 0 "#PWR0133" H 6165 4065 50  0001 C CNN
+F 1 "GND" H 6170 4142 50  0000 C CNN
+F 2 "" H 6165 4315 50  0001 C CNN
+F 3 "" H 6165 4315 50  0001 C CNN
+	1    6165 4315
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5935 3815 5935 3915
+$Comp
+L Mechanical:MountingHole H2
+U 1 1 62235261
+P 7315 1200
+F 0 "H2" H 7415 1246 50  0001 L CNN
+F 1 "MountingHole" H 7415 1200 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 7315 1200 50  0001 C CNN
+F 3 "~" H 7315 1200 50  0001 C CNN
+	1    7315 1200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H1
+U 1 1 622362FB
+P 7305 820
+F 0 "H1" H 7405 866 50  0001 L CNN
+F 1 "MountingHole" H 7405 820 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 7305 820 50  0001 C CNN
+F 3 "~" H 7305 820 50  0001 C CNN
+	1    7305 820 
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H3
+U 1 1 6223735B
+P 7320 1530
+F 0 "H3" H 7420 1576 50  0001 L CNN
+F 1 "MountingHole" H 7420 1530 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 7320 1530 50  0001 C CNN
+F 3 "~" H 7320 1530 50  0001 C CNN
+	1    7320 1530
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H4
+U 1 1 62237A3E
+P 7325 1870
+F 0 "H4" H 7425 1916 50  0001 L CNN
+F 1 "MountingHole" H 7425 1870 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 7325 1870 50  0001 C CNN
+F 3 "~" H 7325 1870 50  0001 C CNN
+	1    7325 1870
+	1    0    0    -1  
+$EndComp
+Text Notes 10575 7640 0    50   ~ 0
+0
+$Comp
+L Connector:Screw_Terminal_01x04 J1
+U 1 1 63064D5E
+P 5135 4795
+F 0 "J1" V 5007 4975 50  0000 L CNN
+F 1 "Screw_Terminal_01x04" V 5098 4975 50  0000 L CNN
+F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-4-2.54_1x04_P2.54mm_Horizontal" H 5135 4795 50  0001 C CNN
+F 3 "~" H 5135 4795 50  0001 C CNN
+	1    5135 4795
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	5235 3915 5235 4595
+Connection ~ 5235 3915
+Wire Wire Line
+	5020 4215 5020 4250
+Wire Wire Line
+	5020 4250 5035 4250
+Wire Wire Line
+	5035 4250 5035 4595
+Connection ~ 5020 4215
+$Comp
+L power:+3.3V #PWR02
+U 1 1 6306D808
+P 5135 4595
+F 0 "#PWR02" H 5135 4445 50  0001 C CNN
+F 1 "+3.3V" H 5150 4768 50  0000 C CNN
+F 2 "" H 5135 4595 50  0001 C CNN
+F 3 "" H 5135 4595 50  0001 C CNN
+	1    5135 4595
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR01
+U 1 1 6306FB8D
+P 4935 4595
+F 0 "#PWR01" H 4935 4345 50  0001 C CNN
+F 1 "GND" H 4940 4422 50  0000 C CNN
+F 2 "" H 4935 4595 50  0001 C CNN
+F 3 "" H 4935 4595 50  0001 C CNN
+	1    4935 4595
+	-1   0    0    1   
+$EndComp
+$EndSCHEMATC

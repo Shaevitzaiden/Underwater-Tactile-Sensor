@@ -1,0 +1,135 @@
+EESchema-LIBRARY Version 2.4
+#encoding utf-8
+#
+# Connector_Screw_Terminal_01x04
+#
+DEF Connector_Screw_Terminal_01x04 J 0 40 Y N 1 F N
+F0 "J" 0 200 50 H V C CNN
+F1 "Connector_Screw_Terminal_01x04" 0 -300 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ TerminalBlock*:*
+$ENDFPLIST
+DRAW
+C 0 -200 25 1 1 6 N
+C 0 -100 25 1 1 6 N
+C 0 0 25 1 1 6 N
+C 0 100 25 1 1 6 N
+S -50 150 50 -250 1 1 10 f
+P 2 1 1 6 -21 -187 13 -220 N
+P 2 1 1 6 -21 -87 13 -120 N
+P 2 1 1 6 -21 13 13 -20 N
+P 2 1 1 6 -21 113 13 80 N
+P 2 1 1 6 -14 -180 20 -213 N
+P 2 1 1 6 -14 -80 20 -113 N
+P 2 1 1 6 -14 20 20 -13 N
+P 2 1 1 6 -14 120 20 87 N
+X Pin_1 1 -200 100 150 R 50 50 1 1 P
+X Pin_2 2 -200 0 150 R 50 50 1 1 P
+X Pin_3 3 -200 -100 150 R 50 50 1 1 P
+X Pin_4 4 -200 -200 150 R 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+# Device_R
+#
+DEF Device_R R 0 0 N Y 1 F N
+F0 "R" 80 0 50 V V C CNN
+F1 "Device_R" 0 0 50 V V C CNN
+F2 "" -70 0 50 V I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ R_*
+$ENDFPLIST
+DRAW
+S -40 -100 40 100 0 1 10 N
+X ~ 1 0 150 50 D 50 50 1 1 P
+X ~ 2 0 -150 50 U 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+# Mechanical_MountingHole
+#
+DEF Mechanical_MountingHole H 0 40 Y Y 1 F N
+F0 "H" 0 200 50 H V C CNN
+F1 "Mechanical_MountingHole" 0 125 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ MountingHole*
+$ENDFPLIST
+DRAW
+C 0 0 50 0 1 50 N
+ENDDRAW
+ENDDEF
+#
+# SamacSys_Parts_06034C104KAT2A
+#
+DEF SamacSys_Parts_06034C104KAT2A C 0 30 Y Y 1 F N
+F0 "C" 350 250 50 H V L CNN
+F1 "SamacSys_Parts_06034C104KAT2A" 350 150 50 H V L CNN
+F2 "CAPC1608X90N" 350 50 50 H I L CNN
+F3 "https://componentsearchengine.com/Datasheets/1/06031A100FAT2A.pdf" 350 -50 50 H I L CNN
+F4 "Multilayer Ceramic Capacitors MLCC - SMD/SMT 4V .1uF X7R 0603 10%" 350 -150 50 H I L CNN "Description"
+F5 "0.9" 350 -250 50 H I L CNN "Height"
+F6 "581-06034C104KAT2A" 350 -350 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/AVX/06034C104KAT2A?qs=EbDiPP9peV90W1IAXf%252BZmA%3D%3D" 350 -450 50 H I L CNN "Mouser Price/Stock"
+F8 "AVX" 350 -550 50 H I L CNN "Manufacturer_Name"
+F9 "06034C104KAT2A" 350 -650 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+P 2 0 1 6 200 0 220 0 N
+P 2 0 1 6 220 100 220 -100 N
+P 2 0 1 6 280 0 300 0 N
+P 2 0 1 6 280 100 280 -100 N
+X ~ 1 0 0 200 R 50 50 0 0 P
+X ~ 2 500 0 200 L 50 50 0 0 P
+ENDDRAW
+ENDDEF
+#
+# Sensors_Pressure_Underwater_MS5837
+#
+DEF Sensors_Pressure_Underwater_MS5837 U 0 40 Y Y 1 F N
+F0 "U" 50 0 50 H V C CNN
+F1 "Sensors_Pressure_Underwater_MS5837" 50 100 50 H V C CNN
+F2 "" 50 0 50 H I C CNN
+F3 "" 50 0 50 H I C CNN
+DRAW
+S -150 -50 300 -450 0 1 0 f
+X GND 1 400 -400 100 L 50 50 1 1 U
+X VDD 2 400 -100 100 L 50 50 1 1 I
+X SCL 3 -250 -100 100 R 50 50 1 1 B
+X SDA 4 -250 -400 100 R 50 50 1 1 B
+ENDDRAW
+ENDDEF
+#
+# power_+3.3V
+#
+DEF power_+3.3V #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -150 50 H I C CNN
+F1 "power_+3.3V" 0 140 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+ALIAS +3.3V
+DRAW
+P 2 0 1 0 -30 50 0 100 N
+P 2 0 1 0 0 0 0 100 N
+P 2 0 1 0 0 100 30 50 N
+X +3V3 1 0 0 0 U 50 50 1 1 W N
+ENDDRAW
+ENDDEF
+#
+# power_GND
+#
+DEF power_GND #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -250 50 H I C CNN
+F1 "power_GND" 0 -150 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+DRAW
+P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
+X GND 1 0 0 0 D 50 50 1 1 W N
+ENDDRAW
+ENDDEF
+#
+#End Library

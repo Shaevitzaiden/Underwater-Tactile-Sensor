@@ -1,0 +1,27 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP NE555DR
+D Single Precision Timer
+K
+F http://www.ti.com/lit/ds/symlink/ne555.pdf
+$ENDCMP
+#
+$CMP 06034C104KAT2A
+D Multilayer Ceramic Capacitors MLCC - SMD/SMT 4V .1uF X7R 0603 10%
+K
+F https://componentsearchengine.com/Datasheets/1/06031A100FAT2A.pdf
+$ENDCMP
+#
+$CMP CRCW080510K0FKEAC
+D Thick Film Resistors - SMD 1/8Watt 10Kohms 1% Commercial Use
+K
+F 
+$ENDCMP
+#
+$CMP GRM155R70G105KA12D
+D Murata 0402 GRM 1uF Ceramic Multilayer Capacitor, 4 V dc, +125C, X7R Dielectric, +/-10% SMD
+K
+F https://componentsearchengine.com/Datasheets/1/GRM155R70G105KA12D.pdf
+$ENDCMP
+#
+#End Doc Library

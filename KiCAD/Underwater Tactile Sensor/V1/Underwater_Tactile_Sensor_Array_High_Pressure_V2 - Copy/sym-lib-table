@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "HighPressureSensorArray-rescue")(type "Legacy")(uri "${KIPRJMOD}/HighPressureSensorArray-rescue.lib")(options "")(descr ""))
+)

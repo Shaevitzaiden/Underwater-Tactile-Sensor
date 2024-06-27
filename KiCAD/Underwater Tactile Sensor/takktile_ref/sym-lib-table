@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name fullArray-eagle-import)(type Legacy)(uri ${KIPRJMOD}/fullArray-eagle-import.lib)(options "")(descr ""))
+)
